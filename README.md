@@ -138,42 +138,45 @@ Example
 
 	e) codonDesigned: 
 	
-codonDesigned <- read_csv("~/Documents/DECONVOLUTION_MITE/Deconvolution_SHOC2/SHOC2_scn_NovaSeq/SHOC2_scn_NovaSeqData/CodonDesigns_SHOC2.csv")
+	codonDesigned <- read_csv("~/Documents/DECONVOLUTION_MITE/Deconvolution_SHOC2/SHOC2_scn_NovaSeq/SHOC2_scn_NovaSeqData/CodonDesigns_SHOC2.csv")
 
-planned codon changes: one column named 'key'
+	planned codon changes: one column named 'key'
 
-Example
- key
+	Example
+	
+ 	key
  
- 1\|AAA
+ 	1\|AAA
  
- 1\|AAT
+	 1\|AAT
  
 	f) screenNM: 
 	
-screenNM<-"SHOC2_pMT025_scrn_rerun" ##anything you call your screens
+	screenNM<-"SHOC2_pMT025_scrn_rerun" ##anything you call your screens
 
 	g) gene: 
 	
-gene <- 'SHOC2' # It is part of input file name, so has to be exact.
+	gene <- 'SHOC2' # It is part of input file name, so has to be exact.
 
 	h) lowCountCutForRef:
 	
-lowCountCutForRef=2 # counts equal or below this will be filtered out.  0 allows all species
+	lowCountCutForRef=2 # counts equal or below this will be filtered out.  0 allows all species
 
 	i) lowCountCutForTreatment:
 	
-lowCountCutForTreatment=2 # counts equal or below this will be filtered out.  0 allows all species
+	lowCountCutForTreatment=2 # counts equal or below this will be filtered out.  0 allows all species
 
 	j) clonalSample:
-clonalSample<-c("Sample13") #"Sample13" #specify clonal sample number if there is one. Otherwise set clonalSample<-NULL
+	
+	clonalSample<-c("Sample13") #"Sample13" #specify clonal sample number if there is one. Otherwise set clonalSample<-NULL
 
 	k) pDNASample:
-pDNASample<-c('Sample14') ##specify pDNA library sample number - you should alway carry one. If not, use an ETP sample
+	
+	pDNASample<-c('Sample14') ##specify pDNA library sample number - you should alway carry one. If not, use an ETP sample
 
 	l) refSamples:
 	
-refSamples<-c('Sample01','Sample02','Sample03')
+	refSamples<-c('Sample01','Sample02','Sample03')
 
 
 Then RUN the entire .r code. The data files and plots will be written into the 'outbox' folders inside of your ’variantCounts’  or ‘codonCounts’ folders. 
