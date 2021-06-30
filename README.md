@@ -116,37 +116,37 @@ INSTRUCTION TO RUN THE PARSER
 
 	a) ORF_Amplicon:
 	
-	This amplicon should be the PCR products inclusive of PCR primer sequences. The boundary of ORF are marked by '[' before the start codon and ']' after the stop codon. This has to be the EXACTLY the 'reference file' used by ASMv1.0 to produce the .codonCounts and .variantCounts.
+	e.g. ORF_Amplicon = "ATTCTCCTTGGAATTTGCCCTTTTTGAGTTTGGATCTTGGTTCATTCTCAAGCCTCAGACAGTGGTTCAAAGTTTTTTTCTTCCATTTCAGGTGTCGTGAGGCTAGCGCCACC[atgagtgtctga]GGATCCCGGGACTAGTACGCGTTAAGTCGACAATCAACCTCTGGATTACAAAATTTGTGAAAGATTGACTGGTATTCTTAACTATGTTGCTCCTTTTACGCTATG"
+	
+	The sequences are case-insensitive. This amplicon should be the PCR products inclusive of PCR primer sequences. The boundary of ORF are marked by '[' before the start codon and ']' after the stop codon. This has to be the EXACTLY the 'reference file' used by ASMv1.0 to produce the .codonCounts and .variantCounts.
 	
 	b) dir_variantCounts:
 	
-	e.g. dir_variantCounts="~/Documents/DECONVOLUTION_MITE/Deconvolution_SHOC2/SHOC2_scn_NovaSeq/SHOC2_scn_NovaSeqData_rerun_ml80_mf5_mo5/variantCounts/"
+	e.g. dir_variantCounts = "~/Documents/variantCounts/" # the directory that holds all .variantCounts files
 	
 	c) dir_cdnCounts:
 	
-	dir_cdnCounts="~/Documents/DECONVOLUTION_MITE/Deconvolution_SHOC2/SHOC2_scn_NovaSeq/SHOC2_scn_NovaSeqData_rerun_ml80_mf5_mo5/codonCounts/"
+	dir_cdnCounts = "~/Documents/codonCounts/" # the directory that holds all .codonCounts files
 
 	d) sampleAnnot: 
 	
-	sampleAnnot<-read_csv("~/Documents/DECONVOLUTION_MITE/Deconvolution_SHOC2/SHOC2_scn_NovaSeq/SHOC2_scn_NovaSeqData/sampleAnnot_SHOC2_NovaSeq.csv")
+	sampleAnnot = read_csv("~/Documents/sampleAnnot_SHOC2_NovaSeq.csv")
 Sample mapping file: two columns named 'Sample' and 'Experiment'
 
 Example
-	
- Sample	| Experiment |
- -------------|---------------------------------------|
- Sample01 |	replicate_1_ETP |
- Sample02 |	replicate_1_drug3days |
+Sample	| Experiment |
+-------------|---------------------------------------|
+Sample01 |	replicate_1_ETP |
+Sample02 |	replicate_1_drug3days |
 
 
 	e) codonDesigned: 
 	
-	codonDesigned <- read_csv("~/Documents/DECONVOLUTION_MITE/Deconvolution_SHOC2/SHOC2_scn_NovaSeq/SHOC2_scn_NovaSeqData/CodonDesigns_SHOC2.csv")
+	codonDesigned = read_csv("~/Documents/CodonDesigns_SHOC2.csv") #specify the file name of intended codons
 
 	planned codon changes: one column named 'key'
 
-	Example
-	
+	Example	
 key |
 -------------- | 
 1\|AAA | 
@@ -154,31 +154,31 @@ key |
 	
 	f) screenNM: 
 	
-	screenNM<-"SHOC2_pMT025_scrn_rerun" ##anything you call your screens
+	screenNM = "SHOC2_pMT025_scrn_rerun" ##anything you call your screens
 
 	g) gene: 
 	
-	gene <- 'SHOC2' # It is part of input file name, so has to be exact.
+	gene = 'SHOC2' # It is part of input file name, so has to be exact.
 
 	h) clonalSample:
 	
-	clonalSample<-c("Sample13") #"Sample13" #specify clonal sample number if there is one. Otherwise set clonalSample<-NULL
+	clonalSample = c("Sample13") #"Sample13" #specify clonal sample number if there is one. Otherwise set clonalSample<-NULL
 
 	i) pDNASample:
 	
-	pDNASample<-c('Sample14') ##specify pDNA library sample number - you should alway carry one. If not, use an ETP sample so the code can run.
+	pDNASample = c('Sample14') ##specify pDNA library sample number - you should alway carry one. If not, use an ETP sample so the code can run.
 
 	j) refSamples:
 	
-	refSamples<-c('Sample01','Sample02','Sample03') # reference samples are those that were not selected. e.g. early time point (ETP) samples.
+	refSamples = c('Sample01','Sample02','Sample03') # reference samples are those that were not selected. e.g. early time point (ETP) samples.
 		
 	k) lowCountCutForRef:
 	
-	lowCountCutForRef=2 # variants in reference samples that got counts equal or below this will be filtered out.  0 allows all species
+	lowCountCutForRef = 2 # variants in reference samples that got counts equal or below this will be filtered out.  0 allows all species
 
 	l) lowCountCutForTreatment:
 	
-	lowCountCutForTreatment=2 # variants in treatment/selection samples that got counts equal or below this will be filtered out.  0 allows all species
+	lowCountCutForTreatment = 2 # variants in treatment/selection samples that got counts equal or below this will be filtered out.  0 allows all species
 
 
 Then RUN the entire .r code. The data files and plots will be written into the 'outbox' folders inside of your ’variantCounts’  or ‘codonCounts’ folders. 
