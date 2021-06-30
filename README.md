@@ -16,7 +16,7 @@ What is ASMv1.0?
 
 ASMv1.0, developed by Ted Sharpe of The Broad Institute (tsharpe@broadinstitute.org), takes NGS .fastq files to assign counts to the detected variants.
 
-**READS FILTERING**: The reads from an NGS fragment are trimmed (1) by base quality (from 2 ends, finding first 15-bp that every bases has above base-quality threshold), (2) by removing non-ORF transposon sequences, (3) by requiring that the outermost nucleotide variations in the reads have a number of reference bases as specified by --min-flanking-length parameter (2-5, depending on how the library is designed, e.g. if the library has all single codon changes, --min-flanking-length=2 will suffice to ensure a codon-signature of a variant is not split between two Nextera fragments), and (4) by requiring the trimmed reads be longer than the –min-length = 40, for example.
+**READS FILTERING**: The reads from an NGS fragment are trimmed (1) by base quality (from 2 ends, finding first 15-bp that every base has above base-quality threshold), (2) by removing non-ORF transposon sequences, (3) by requiring that the outermost nucleotide variations in the reads have a number of reference bases as specified by --min-flanking-length parameter (2-5, depending on how the library is designed, e.g. if the library has all single codon changes, --min-flanking-length=2 will suffice to ensure a codon-signature of a variant is not split between two Nextera fragments), and (4) by requiring the trimmed reads be longer than the –min-length = 40, for example.
 
 **VARIANT CALLING**: The reads that have passed the filtering are used differently by ORFcall (an earlier version software also by Ted Sharpe, as used in: Giacomelli et al (2018) Nat Genet 50: 1381–1387) and ASMv1.0:
 
