@@ -130,10 +130,13 @@ INSTRUCTION TO RUN THE PARSER
 	
 	sampleAnnot<-read_csv("~/Documents/DECONVOLUTION_MITE/Deconvolution_SHOC2/SHOC2_scn_NovaSeq/SHOC2_scn_NovaSeqData/sampleAnnot_SHOC2_NovaSeq.csv")
 Sample mapping file: two columns named 'Sample' and 'Experiment'
+
 Example
- Sample	Experiment
- Sample01	replicate_1_ETP
- Sample02	replicate_1_drug3days
+	
+ Sample	| Experiment |
+ -------------|---------------------------------------|
+ Sample01 |	replicate_1_ETP |
+ Sample02 |	replicate_1_drug3days |
 
 
 	e) codonDesigned: 
@@ -144,12 +147,11 @@ Example
 
 	Example
 	
- 	key
- 
- 	1\|AAA
- 
-	 1\|AAT
- 
+key |
+-------------- | 
+1\|AAA | 
+1\|AAT| 
+	
 	f) screenNM: 
 	
 	screenNM<-"SHOC2_pMT025_scrn_rerun" ##anything you call your screens
@@ -158,25 +160,25 @@ Example
 	
 	gene <- 'SHOC2' # It is part of input file name, so has to be exact.
 
-	h) lowCountCutForRef:
-	
-	lowCountCutForRef=2 # counts equal or below this will be filtered out.  0 allows all species
-
-	i) lowCountCutForTreatment:
-	
-	lowCountCutForTreatment=2 # counts equal or below this will be filtered out.  0 allows all species
-
-	j) clonalSample:
+	h) clonalSample:
 	
 	clonalSample<-c("Sample13") #"Sample13" #specify clonal sample number if there is one. Otherwise set clonalSample<-NULL
 
-	k) pDNASample:
+	i) pDNASample:
 	
-	pDNASample<-c('Sample14') ##specify pDNA library sample number - you should alway carry one. If not, use an ETP sample
+	pDNASample<-c('Sample14') ##specify pDNA library sample number - you should alway carry one. If not, use an ETP sample so the code can run.
 
-	l) refSamples:
+	j) refSamples:
 	
-	refSamples<-c('Sample01','Sample02','Sample03')
+	refSamples<-c('Sample01','Sample02','Sample03') # reference samples are those that were not selected. e.g. early time point (ETP) samples.
+		
+	k) lowCountCutForRef:
+	
+	lowCountCutForRef=2 # variants in reference samples that got counts equal or below this will be filtered out.  0 allows all species
+
+	l) lowCountCutForTreatment:
+	
+	lowCountCutForTreatment=2 # variants in treatment/selection samples that got counts equal or below this will be filtered out.  0 allows all species
 
 
 Then RUN the entire .r code. The data files and plots will be written into the 'outbox' folders inside of your ’variantCounts’  or ‘codonCounts’ folders. 
