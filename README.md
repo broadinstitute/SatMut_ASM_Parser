@@ -154,7 +154,7 @@ key |
 	
 	f) screenNM: 
 	
-	screenNM = "SHOC2_pMT025_scrn_rerun" ##anything you call your screens
+	screenNM = "SHOC2_pMT025_scrn_rerun" ##anything you call your screen
 
 	g) gene: 
 	
@@ -170,7 +170,7 @@ key |
 
 	j) refSamples:
 	
-	refSamples = c('Sample01','Sample02','Sample03') # reference samples are those that were not selected. e.g. early time point (ETP) samples.
+	refSamples = c('Sample01','Sample02','Sample03') # It needs 3 elements. The reference samples are those that were not selected. e.g. early time point (ETP) samples. If you don't have 3 reference samples, repeat your reference sample name(s) to make a 3-element array.
 		
 	k) lowCountCutForRef:
 	
