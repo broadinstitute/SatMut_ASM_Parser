@@ -20,18 +20,18 @@ ORF_Amplicon="ATTCTCCTTGGAATTTGCCCTTTTTGAGTTTGGATCTTGGTTCATTCTCAAGCCTCAGACAGTGGT
 #where 1_CJNC2.1. is lane.flowcell.lane.
 #where Sample01 is generic sample number.
 
-dir_variantCounts="~/Documents/DECONVOLUTION_MITE/Deconvolution_SHOC2/SHOC2_scn_NovaSeq/SHOC2_scn_NovaSeqData_rerun_ml80_mf5_mo5/variantCounts/"
+dir_variantCounts="~/Documents/variantCounts/"
 
-dir_cdnCounts="~/Documents/DECONVOLUTION_MITE/Deconvolution_SHOC2/SHOC2_scn_NovaSeq/SHOC2_scn_NovaSeqData_rerun_ml80_mf5_mo5/codonCounts/"
+dir_cdnCounts="~/Documents/codonCounts/"
 
-sampleAnnot<-read_csv("~/Documents/DECONVOLUTION_MITE/Deconvolution_SHOC2/SHOC2_scn_NovaSeq/SHOC2_scn_NovaSeqData/sampleAnnot_SHOC2_NovaSeq.csv")
+sampleAnnot<-read_csv("~/Documents/sampleAnnot_SHOC2_NovaSeq.csv")
 #Sample mapping file: two columns named 'Sample' and 'Experiment'
 #Example
 # Sample	Experiment
 # Sample01	pMT025_SMARCB1sat_plasmidPool_PCR
 # Sample02	pMT025_SMARCB1sat_plasmidPool_straight
 
-codonDesigned <- read_csv("~/Documents/DECONVOLUTION_MITE/Deconvolution_SHOC2/SHOC2_scn_NovaSeq/SHOC2_scn_NovaSeqData/CodonDesigns_SHOC2.csv")
+codonDesigned <- read_csv("~/Documents/CodonDesigns_SHOC2.csv")
 #planned codon changes: one column named 'key'
 #Example
 # key
@@ -45,15 +45,15 @@ screenNM<-"SHOC2_pMT025_scrn_rerun"
 
 gene <- 'SHOC2' # It is part of input file name, so has to be exact.
 
-lowCountCutForRef=2 # counts equal or below this will be filtered out.  0 allows all species
-
-lowCountCutForTreatment=2 # counts equal or below this will be filtered out.  0 allows all species
-
 clonalSample<-c("Sample13") #"Sample13" #specify clonal sample number if there is one. Otherwise set clonalSample<-NULL
 
 pDNASample<-c('Sample14') ##specify pDNA library sample number - you should alway carry one. If not, use an ETP sample
 
-refSamples<-c('Sample01','Sample02','Sample03')
+refSamples<-c('Sample01','Sample02','Sample03') # It needs 3 elements. The reference samples are those that were not selected. e.g. early time point (ETP) samples. If you don't have 3 reference samples, repeat your reference sample name(s) to make a 3-element array.
+
+lowCountCutForRef=2 # variants in reference samples that got counts equal or below this will be filtered out.  0 allows all species
+
+lowCountCutForTreatment=2 # # variants in treatment/selection samples that got counts equal or below this will be filtered out.  0 allows all species
 
 
 ######################### end of analysis setup
