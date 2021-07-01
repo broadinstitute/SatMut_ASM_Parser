@@ -10,9 +10,9 @@ library(ggrepel)
 # This amplicon should be the PCR products inclusive of PCR primer sequences. The boundary of ORF are marked by '[' before the start codon and ']' after the stop codon. This has to be the EXACTLY the 'reference file' used by AnalyzeSaturationMutagenesis to produce the .codonCounts and .variantCounts.
 # This amplicon should be the PCR products inclusive of PCR primer sequences. The boundary of ORF are marked by '[' before the start codon and ']' after the stop codon. This has to be the EXACTLY the 'reference file' used by AnalyzeSaturationMutagenesis to produce the .codonCounts and .variantCounts.
 
-#pMT025-SHOC2_XY304_305_Amplicon
+#pMT025-TP53_XY304_305_Amplicon
 
-ORF_Amplicon="ATTCTCCTTGGAATTTGCCCTTTTTGAGTTTGGATCTTGGTTCATTCTCAAGCCTCAGACAGTGGTTCAAAGTTTTTTTCTTCCATTTCAGGTGTCGTGAGGCTAGCGCCACC[atgagtagtagtttaggaaaagaaaaagactctaaagaaaaagatcccaaagtaccatcagccaaggaaagagaaaaggaggcaaaagcctctggaggttttgggaaagagagcaaagaaaaagaacctaagaccaaagggaaagatgccaaagatggaaagaaggactccagtgctgcccaaccaggggtggcattttcagttgacaatacgatcaaacggccaaacccagcacctgggactagaaaaaaatccagcaatgcagaggtgattaaagagctcaacaaatgccgggaagagaattcaatgcgtttggacttatccaagagatctatacacatattgccatcatcaatcaaagagttgactcaattaacagaactttatttatacagtaacaaattgcagtccctcccagcagaggtgggatgtttagtaaatctcatgacactggctctaagtgaaaattcacttaccagtttgcctgactctcttgataacttgaagaagctgcggatgcttgatttacggcataataaactgagagaaattccttcagtggtgtataggctggattctctcaccactctttatcttcgatttaatcgtataactactgtggaaaaggacatcaaaaacttgtcaaaactcagcatgcttagcattcgagagaacaaaattaaacaactacctgctgaaattggtgaattatgtaatctcatcacgctggatgtagctcacaatcaacttgaacaccttccaaaggagattggaaactgtacacagataaccaaccttgacttgcagcacaatgaactgctagacctcccagatactataggaaacctgtccagtttaagtcgtcttggtctgagatataacagactgtcagcaatacccagatcattagcaaaatgcagtgcacttgaagaattaaatttagagaacaataacatttctactttaccagagagtcttttatcaagtcttgtgaaactgaatagtttgaccttagctagaaattgcttccagttgtatccagtgggtggtccatctcagttttctaccatctattccctcaacatggaacacaatcgaatcaacaaaattccatttggaattttctccagagcaaaagtattaagtaagctgaatatgaaggacaatcagttaacatcacttcccttggattttggaacttggaccagtatggtagaattgaatttagccactaatcagctcacaaagatccctgaggatgtgtctggtctcgtttctcttgaggttcttatcttatcaaacaatcttctaaagaagcttccccatggtcttggaaaccttaggaagttaagagagttggatctagaagagaacaaattggaatccttgccaaatgaaattgcatatcttaaggatttacagaaattagtcttgacaaacaaccagttgaccactcttcccagaggcattggtcaccttactaatctcacacatctgggccttggagagaacctacttactcaccttcctgaagaaattggtacactggagaacctagaagaactgtatttgaatgacaaccccaacctgcatagccttccctttgagctggcactctgcagcaagctttcaatcatgagtattgagaactgtccactcagtcaccttccacctcagattgttgctggggggccttctttcatcattcagttcttaaagatgcagggtccatatcgtgccatggtctga]GGATCCCGGGACTAGTACGCGTTAAGTCGACAATCAACCTCTGGATTACAAAATTTGTGAAAGATTGACTGGTATTCTTAACTATGTTGCTCCTTTTACGCTATG"
+ORF_Amplicon="ATTCTCCTTGGAATTTGCCCTTTTTGAGTTTGGATCTTGGTTCATTCTCAAGCCTCAGACAGTGGTTCAAAGTTTTTTTCTTCCATTTCAGGTGTCGTGAGGCTAGCGCCACC[ATGGAGGAGCCGCAGTCAGATCCTAGCGTCGAGCCCCCTCTGAGTCAGGAAACATTTTCAGACCTATGGAAACTACTTCCTGAAAACAACGTTCTGTCCCCCTTGCCGTCCCAAGCAATGGATGATTTGATGCTGTCCCCGGACGATATTGAACAATGGTTCACTGAAGACCCAGGTCCAGATGAAGCTCCCAGAATGCCAGAGGCTGCTCCCCGCGTGGCCCCTGCACCAGCAGCTCCTACACCGGCGGCCCCTGCACCAGCCCCCTCCTGGCCCCTGTCATCTTCTGTCCCTTCCCAGAAAACCTACCAGGGCAGCTACGGTTTCCGTCTGGGCTTCTTGCATTCTGGGACAGCCAAGTCTGTGACTTGCACGTACTCCCCTGCCCTCAACAAGATGTTTTGCCAACTGGCCAAGACCTGCCCTGTGCAGCTGTGGGTTGATTCCACACCCCCGCCCGGCACCCGCGTCCGCGCCATGGCCATCTACAAGCAGTCACAGCACATGACGGAGGTTGTGAGGCGCTGCCCCCACCATGAGCGCTGCTCAGATAGCGATGGTCTGGCCCCTCCTCAGCATCTTATCCGAGTGGAAGGAAATTTGCGTGTGGAGTATTTGGATGACAGAAACACTTTTCGACATAGTGTGGTGGTGCCCTATGAGCCGCCTGAGGTTGGCTCTGACTGTACCACCATCCACTACAACTACATGTGTAACAGTTCCTGCATGGGCGGCATGAACCGGAGGCCCATCCTCACCATCATCACACTGGAAGACTCCAGTGGTAATCTACTGGGACGGAACAGCTTTGAGGTGCGTGTTTGTGCCTGTCCTGGGAGAGACCGGCGCACAGAGGAAGAGAATCTCCGCAAGAAAGGGGAGCCTCACCACGAGCTGCCCCCAGGGAGCACTAAGCGAGCACTGCCCAACAACACCAGCTCCTCTCCCCAGCCAAAGAAGAAACCACTGGATGGAGAATATTTCACCCTTCAGATCCGTGGGCGTGAGCGCTTCGAGATGTTCCGAGAGCTGAATGAGGCCTTGGAACTCAAGGATGCCCAGGCTGGGAAGGAGCCAGGGGGGAGCAGGGCTCACTCCAGCCACCTGAAGTCCAAAAAGGGTCAGTCTACCTCCCGCCATAAAAAACTCATGTTCAAGACAGAAGGGCCTGACTCAGACTAG]ACGCGTTAAGTCGACAATCAACCTCTGGATTACAAAATTTGTGAAAGATTGACTGGTATTCTTAACTATGTTGCTCCTTTTACGCTATG"
 
 ##dir for .variantCounts
 #Make your .variantCounts file names in this format, and place them in a folder for the parser to access.
@@ -20,18 +20,18 @@ ORF_Amplicon="ATTCTCCTTGGAATTTGCCCTTTTTGAGTTTGGATCTTGGTTCATTCTCAAGCCTCAGACAGTGGT
 #where 1_CJNC2.1. is lane.flowcell.lane.
 #where Sample01 is generic sample number.
 
-dir_variantCounts="~/Documents/variantCounts/"
+dir_variantCounts="~/Desktop/SatMut_ASM_Parser-1.9/Training_data/variantCounts/"
 
-dir_cdnCounts="~/Documents/codonCounts/"
+dir_cdnCounts="~/Desktop/SatMut_ASM_Parser-1.9/Training_data/codonCounts/"
 
-sampleAnnot<-read_csv("~/Documents/sampleAnnot_SHOC2_NovaSeq.csv")
+sampleAnnot = read_csv("~/Desktop/SatMut_ASM_Parser-1.9/Training_data/P53_Lane13_A4C_SampleAnnot.csv")
 #Sample mapping file: two columns named 'Sample' and 'Experiment'
 #Example
 # Sample	Experiment
 # Sample01	pMT025_SMARCB1sat_plasmidPool_PCR
 # Sample02	pMT025_SMARCB1sat_plasmidPool_straight
 
-codonDesigned <- read_csv("~/Documents/CodonDesigns_SHOC2.csv")
+codonDesigned <- read_csv("~/Desktop/SatMut_ASM_Parser-1.9/Training_data/P53_pMT025_codonList.csv")
 #planned codon changes: one column named 'key'
 #Example
 # key
@@ -41,24 +41,26 @@ codonDesigned <- read_csv("~/Documents/CodonDesigns_SHOC2.csv")
 #formatted as aa_position|planned_codon. You can comma-delimit multiple codon changes when a variant was designed to have such changes.
 
 
-screenNM<-"SHOC2_pMT025_scrn_rerun"
+screenNM<-"P53_pMT025_scrn_train"
 
-gene <- 'SHOC2' # It is part of input file name, so has to be exact.
+gene <- 'TP53' # It is part of input file name, so has to be exact.
 
-clonalSample<-c("Sample13") #"Sample13" #specify clonal sample number if there is one. Otherwise set clonalSample<-NULL
+clonalSample<-NULL #"Sample13" #specify clonal sample number if there is one. Otherwise set clonalSample<-NULL
 
 pDNASample<-c('Sample14') ##specify pDNA library sample number - you should alway carry one. If not, use an ETP sample
 
-refSamples<-c('Sample01','Sample02','Sample03') # It needs 3 elements. The reference samples are those that were not selected. e.g. early time point (ETP) samples. If you don't have 3 reference samples, repeat your reference sample name(s) to make a 3-element array.
+refSamples<-c('Sample13','Sample14','Sample13') ## # It needs 3 elements. The reference samples are those that were not selected. e.g. early time point (ETP) samples. If you don't have 3 reference samples, repeat your reference sample name(s) to make a 3-element array.
 
-lowCountCutForRef=2 # variants in reference samples that got counts equal or below this will be filtered out.  0 allows all species
 
-lowCountCutForTreatment=2 # # variants in treatment/selection samples that got counts equal or below this will be filtered out.  0 allows all species
+lowCountCutForRef=2 # counts equal or below this will be filtered out.  0 allows all species
+
+lowCountCutForTreatment=2 # counts equal or below this will be filtered out.  0 allows all species
+
 
 
 ######################### end of analysis setup
 
-codons.per.pos=22 #if If the 'codonDesigned' is nor populated, this will use to calculate top abund variants as the 'intended
+codons.per.pos=22 #if If the 'codonDesigned' is nor populated, this will use to calculate top abund variants as the 'intended'
 pos.off.set<-0 ##Set it 0 for mutagenesis starts at codon #1, otherwise set accordingly
 
 samples.for.rank=c(pDNASample,refSamples) # pick 3 samples of pDNA, ETP. These samples may be used to trim the data by removing millions of low-count variants. If you don't have 3 samples, you may repeat one trice.
@@ -593,8 +595,14 @@ variantCountsfiles =
              ignore.case = FALSE, include.dirs = FALSE, no.. = FALSE)
 
 
+outBox_VrtCt <- paste0(dir_variantCounts,"outBox_",lowCountCutForRef,"refSampleCtCutOff_",Sys.Date(),"/")
+if(!dir.exists(path=outBox_VrtCt)){
+  print ("new folder need to make")
+  dir.create(path=outBox_VrtCt,mode="0777", showWarnings = TRUE)
+}
 
-vtCtTblfolder <- paste0(dir_variantCounts,"variantCountsTables_",
+
+vtCtTblfolder <- paste0(outBox_VrtCt,"variantCountsTables_",
                   lowCountCutForRef,"RefCtCutOff_", lowCountCutForTreatment,"others/")
 
 if(!dir.exists(path=vtCtTblfolder)){
@@ -638,7 +646,8 @@ variantCountsTblfiles =
              full.names = FALSE, recursive = FALSE,
              ignore.case = FALSE, include.dirs = FALSE, no.. = FALSE)
 
-vtCtTblConslFolder <- paste0(dir_variantCounts,"vtCountsTables_consolidated_",lowCountCutForRef,"RefCtCutOff_", lowCountCutForTreatment,"others/")
+
+vtCtTblConslFolder <- paste0(outBox_VrtCt,"variantCountsTables_consolidated_",lowCountCutForRef,"RefCtCutOff_", lowCountCutForTreatment,"others/")
 
 if(!dir.exists(path=vtCtTblConslFolder)){
   print ("new folder need to make")
@@ -686,11 +695,11 @@ consol_sample_files =
              full.names = FALSE, recursive = FALSE,
              ignore.case = FALSE, include.dirs = FALSE, no.. = FALSE)
 
-outBox_VrtCt <- paste0(dir_variantCounts,"outBox_",lowCountCutForRef,"refSampleCtCutOff_",Sys.Date(),"/")
-if(!dir.exists(path=outBox_VrtCt)){
-  print ("new folder need to make")
-  dir.create(path=outBox_VrtCt,mode="0777", showWarnings = TRUE)
-}
+# outBox_VrtCt <- paste0(dir_variantCounts,"outBox_",lowCountCutForRef,"refSampleCtCutOff_",Sys.Date(),"/")
+# if(!dir.exists(path=outBox_VrtCt)){
+#   print ("new folder need to make")
+#   dir.create(path=outBox_VrtCt,mode="0777", showWarnings = TRUE)
+# }
 
 
 df_in1<-data.frame()
@@ -752,7 +761,7 @@ codonCountsfiles =
 samplesInCdnData<-unique(str_sub(codonCountsfiles,
                                  str_locate(codonCountsfiles,'Sample')[1],str_locate(codonCountsfiles,'Sample')[1]+7))
 
-cdnCount_outBox <- paste0(dir_cdnCounts,"cdnCount_outBox/")
+cdnCount_outBox <- paste0(dir_cdnCounts,"codonCounts_outBox/")
 if(!dir.exists(path=cdnCount_outBox)){
   print ("new folder need to make")
   dir.create(path=cdnCount_outBox,mode="0777", showWarnings = TRUE)
@@ -1698,14 +1707,8 @@ names(File1)
 
 
 df_clust<-File1[which(
-  str_detect(names(File1),'\\.ct$') #| 
-  #          str_detect(names(File1),'\\.ct_frctn$')
-  
-)] 
+  str_detect(names(File1),'\\.ct$'))] 
 
-names(df_clust)
-df_clust<-df_clust[, -which(str_detect(str_to_upper(names(df_clust)),'CLONAL') |
-                              str_detect(str_to_upper(names(df_clust)),'HOP'))]
 
 names(df_clust)
 
