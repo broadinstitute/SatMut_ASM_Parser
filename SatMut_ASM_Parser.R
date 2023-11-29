@@ -3,73 +3,156 @@ library(tidyverse)
 library(stringdist)
 library(cowplot)
 library(ggrepel)
+library(reshape2)
 
 ############## ANALYSIS SETUP ###########
+# set up a directory where you will have 3 files and 2 data folders.
+# the 2 folder names and 3 file names have exactly the names as listed below.
 
+# data folder 'codonCounts' holds all .codonCounts files produced by AnalyzeSaturationMutagenesis (ASM)
+# data folder 'variantCounts' holds all .variantCounts files produced by AnalyzeSaturationMutagenesis (ASM)
+# file 'SatMut_ASM_Parser.R' is this R code
+# file 'SampleAnnot.csv' shows Sample-to-Experiment mapping
+# file 'Intended_codon_list_1col.csv' shows the intended codon changes of the library.
 
-# This amplicon should be the PCR products inclusive of PCR primer sequences. The boundary of ORF are marked by '[' before the start codon and ']' after the stop codon. This has to be the EXACTLY the 'reference file' used by AnalyzeSaturationMutagenesis to produce the .codonCounts and .variantCounts.
-# This amplicon should be the PCR products inclusive of PCR primer sequences. The boundary of ORF are marked by '[' before the start codon and ']' after the stop codon. This has to be the EXACTLY the 'reference file' used by AnalyzeSaturationMutagenesis to produce the .codonCounts and .variantCounts.
+# After you have set up the directory structure, you edit this R code (up to line 87, where the 'setup' ends) to reflect the specific 
+# parameters of your screen. And run this code. The output files will be written in folders under the codonCounts and variantCounts 
+# directories.
 
-#pMT025-TP53_XY304_305_Amplicon
+# 1: set R code work directory to the folder you will put 2 data folders and 3 files..
+work.dir="~/Desktop/WorkingDir_for_Parser_v4/" ###You will have to set this parameter to where you the R code is located on your machine.
 
-ORF_Amplicon="ATTCTCCTTGGAATTTGCCCTTTTTGAGTTTGGATCTTGGTTCATTCTCAAGCCTCAGACAGTGGTTCAAAGTTTTTTTCTTCCATTTCAGGTGTCGTGAGGCTAGCGCCACC[ATGGAGGAGCCGCAGTCAGATCCTAGCGTCGAGCCCCCTCTGAGTCAGGAAACATTTTCAGACCTATGGAAACTACTTCCTGAAAACAACGTTCTGTCCCCCTTGCCGTCCCAAGCAATGGATGATTTGATGCTGTCCCCGGACGATATTGAACAATGGTTCACTGAAGACCCAGGTCCAGATGAAGCTCCCAGAATGCCAGAGGCTGCTCCCCGCGTGGCCCCTGCACCAGCAGCTCCTACACCGGCGGCCCCTGCACCAGCCCCCTCCTGGCCCCTGTCATCTTCTGTCCCTTCCCAGAAAACCTACCAGGGCAGCTACGGTTTCCGTCTGGGCTTCTTGCATTCTGGGACAGCCAAGTCTGTGACTTGCACGTACTCCCCTGCCCTCAACAAGATGTTTTGCCAACTGGCCAAGACCTGCCCTGTGCAGCTGTGGGTTGATTCCACACCCCCGCCCGGCACCCGCGTCCGCGCCATGGCCATCTACAAGCAGTCACAGCACATGACGGAGGTTGTGAGGCGCTGCCCCCACCATGAGCGCTGCTCAGATAGCGATGGTCTGGCCCCTCCTCAGCATCTTATCCGAGTGGAAGGAAATTTGCGTGTGGAGTATTTGGATGACAGAAACACTTTTCGACATAGTGTGGTGGTGCCCTATGAGCCGCCTGAGGTTGGCTCTGACTGTACCACCATCCACTACAACTACATGTGTAACAGTTCCTGCATGGGCGGCATGAACCGGAGGCCCATCCTCACCATCATCACACTGGAAGACTCCAGTGGTAATCTACTGGGACGGAACAGCTTTGAGGTGCGTGTTTGTGCCTGTCCTGGGAGAGACCGGCGCACAGAGGAAGAGAATCTCCGCAAGAAAGGGGAGCCTCACCACGAGCTGCCCCCAGGGAGCACTAAGCGAGCACTGCCCAACAACACCAGCTCCTCTCCCCAGCCAAAGAAGAAACCACTGGATGGAGAATATTTCACCCTTCAGATCCGTGGGCGTGAGCGCTTCGAGATGTTCCGAGAGCTGAATGAGGCCTTGGAACTCAAGGATGCCCAGGCTGGGAAGGAGCCAGGGGGGAGCAGGGCTCACTCCAGCCACCTGAAGTCCAAAAAGGGTCAGTCTACCTCCCGCCATAAAAAACTCATGTTCAAGACAGAAGGGCCTGACTCAGACTAG]ACGCGTTAAGTCGACAATCAACCTCTGGATTACAAAATTTGTGAAAGATTGACTGGTATTCTTAACTATGTTGCTCCTTTTACGCTATG"
+# 2: 
+# This amplicon should be the PCR products inclusive of PCR primer sequences. The boundary of ORF are marked by '[' before the 
+# start codon and ']' after the stop codon. This has to be the EXACTLY the 'reference file' used by AnalyzeSaturationMutagenesis 
+# to produce the .codonCounts and .variantCounts.
 
-##dir for .variantCounts
-#Make your .variantCounts file names in this format, and place them in a folder for the parser to access.
-#1_CJNC2.1.Sample01_KRASG12C.variantCounts
-#where 1_CJNC2.1. is lane.flowcell.lane.
-#where Sample01 is generic sample number.
+#>my ORF sequence: Same reference sequence (case insensitive) used in running AnalyzeSaturationMutagenesis
+ORF_Amplicon="attctccttggaatttgccctttttgagtttggatcttggttcattctcaagcctcagacagtggttcaaagtttttttcttccatttcaggtgtcgtgagGCTAGCGCCACC[ATGGAATGGTCCTGGGTGTTCCTGTTCTTCCTTTCCGTCACCACTGGAGTGCACAGCgcacctacttcaagttctacaaagaaaacacagctacaactggagcatttactgctggatttacagatgattttgaatggaattaataattacaagaatcccaaactcaccaggatgctcacatttaagttttacatgcccaagaaggccacagaactgaaacatcttcagtgtctagaagaagaactcaaacctctggaggaagtgctaaatttagctcaaagcaaaaactttcacttaagacccagggacttaatcagcaatatcaacgtaatagttctggaactaaagggatctgaaacaacattcatgtgtgaatatgctgatgagacagcaaccattgtagaatttctgaacagatggattaccttttgtcaaagcatcatctcaacactgactGCTGGATCCGGAGGAAGCGGCGGTTCCTACCCATACGACGTGCCTGACTACGCCGGAGGATCGGGAGGAAGCGGAGGAAGCCCCGTCCCTTCCACACCTCCTACGCCTTCGCCTAGCACCCCGCCTACTCCTTCCCCTTCGCCAGTGCCGTCCACCCCTCCAACTCCGTCCCCGTCGACTCCTCCCACTCCTTCTCCGTCCCCTGTGCCCTCGACTCCCCCTACTCCGTCACCGAGCACCCCACCGACTCCATCCCCATCGGCATCGGGCGGATCGGGAAACGCCGTCGGTCAAGACACCCAAGAAGTGATCGTGGTGCCACATAGCCTGCCGTTCAAGGTCGTGGTCATCTCCGCTATCCTGGCTCTTGTGGTGCTGACCATCATCTCCTTGATCATTCTCATCATGCTGTGGCAGAAGAAGCCCAGATAA]TAAACGCGTtaagtcgacaatcaacctctggattacaaaatttgtgaaagattgactggtattcttaactatgttgctccttttacgctatg"
 
-dir_variantCounts="~/Desktop/SatMut_ASM_Parser-1.9/Training_data/variantCounts/"
+# 3:
+## set "SampleAnnot.csv" file.
+# Sample mapping file: two columns named 'Sample' and 'Experiment'.
+# Be advised that 'Sample' column has to be the below format (case sensitive), and do not have 'spaces', or 'dashes' in 'Experiment'
+# Note if you have multiple sequencing runs from the same sample and/or you wish to combine the data from runs of sequencing data into one,
+# you may name those runs with the same Sample number but followed by '_1', '_2' etc. (e.g., Sample08_1). Make sure these Sample numbers are 
+# consistent in both .codonCounts and .variantCounts data file names and the "SampleAnnot.csv" file, AND the 'Experiment' should be the
+# same entry that is shared by the samples involved. If you would like to keep these replicates separate, as I often do, name the
+# sample/experiment uniquely.
 
-dir_cdnCounts="~/Desktop/SatMut_ASM_Parser-1.9/Training_data/codonCounts/"
-
-sampleAnnot = read_csv("~/Desktop/SatMut_ASM_Parser-1.9/Training_data/P53_Lane13_A4C_SampleAnnot.csv")
-#Sample mapping file: two columns named 'Sample' and 'Experiment'
 #Example
 # Sample	Experiment
-# Sample01	pMT025_SMARCB1sat_plasmidPool_PCR
-# Sample02	pMT025_SMARCB1sat_plasmidPool_straight
+# Sample01	experiment1
+# Sample02	experiment2
+# Sample03	experiment3
+# Sample04	experiment4
+# Sample05	experiment5
+# Sample06	experiment6
+# Sample07	experiment7
+# Sample08_1	experiment8
+# Sample08_2	experiment8
+# Sample08_3  experiment8
+# Sample08_4	experiment8
 
-codonDesigned <- read_csv("~/Desktop/SatMut_ASM_Parser-1.9/Training_data/P53_pMT025_codonList.csv")
+# 4: 
+# "Intended_codon_list_1col.csv"
 #planned codon changes: one column named 'key'
 #Example
 # key
 # 1|AAA
 # 1|AAT
 # 1|ACT
-#formatted as aa_position|planned_codon. You can comma-delimit multiple codon changes when a variant was designed to have such changes.
+#formatted as aa_position|planned_codon.
 
+# 5: specify six run parameters:
+screenNM<-"MyScreen" #will be part of file names.
+gene <- 'MyGene' # will be part of file names
+clonalSample<-NULL #"Sample13" #specify clonal sample number if there is one. Otherwise set clonalSample<-NULL. If you have a clonal sample
+##you will have the option to apply it to all samples to see if correction helps in remove noises.
+pDNASample<-c('Sample01') ##specify pDNA library sample number - you should always carry one. If not, use an ETP sample. this sample is used 
+# to QC the correctness of the template ORF, the assumed vs obtained in this sequencing data. The pDNA sample is also used to assess 
+# variant distribution in the library.
+refSamples<-c('Sample01','Sample01','Sample01') ## # reference samples are those less selected, therefore we use them to filter and remove 
+# low read coverage. It needs 3 elements. The reference samples are those that were not selected. e.g. pDNA, or early time point (ETP) 
+#samples. If you don't have 3 reference samples, repeat your reference sample name(s) to make a 3-element array.
+pos.off.set<-0#485 ##In the most cases, set it 0 for libraries where the data starts at codon #1, otherwise set accordingly
 
-screenNM<-"P53_pMT025_scrn_train"
-
-gene <- 'TP53' # It is part of input file name, so has to be exact.
-
-clonalSample<-NULL #"Sample13" #specify clonal sample number if there is one. Otherwise set clonalSample<-NULL
-
-pDNASample<-c('Sample14') ##specify pDNA library sample number - you should alway carry one. If not, use an ETP sample
-
-refSamples<-c('Sample13','Sample14','Sample13') ## # It needs 3 elements. The reference samples are those that were not selected. e.g. early time point (ETP) samples. If you don't have 3 reference samples, repeat your reference sample name(s) to make a 3-element array.
-
-
-lowCountCutForRef=2 # counts equal or below this will be filtered out.  0 allows all species
-
-lowCountCutForTreatment=2 # counts equal or below this will be filtered out.  0 allows all species
-
-
-
-######################### end of analysis setup
-
-codons.per.pos=22 #if If the 'codonDesigned' is nor populated, this will use to calculate top abund variants as the 'intended'
-pos.off.set<-0 ##Set it 0 for mutagenesis starts at codon #1, otherwise set accordingly
-
-samples.for.rank=c(pDNASample,refSamples) # pick 3 samples of pDNA, ETP. These samples may be used to trim the data by removing millions of low-count variants. If you don't have 3 samples, you may repeat one trice.
-
-contrl.pos=NULL
+# This will be the end of analysis parameters setup and you are ready to select-all and run it. The output files/plots can be 
+# found in subdirectories under  codonCounts/ or variantCounts/
+### A log file is part of the output is useful for troubleshooting.  
+### The runtime ranges from 15 min to 2-3 hours, depending on data size.
 
 cat("Done with analysis_setup")
 
-############## EEND OF ANALYSIS SETUP ###########
+####################################### END OF RUN SETUP: SELECT-ALL AND RUN IT ##################################################
+
+### A log file is part of the output is useful for troubleshooting.  
+### The runtime ranges from 15 min to 2-3 hours, depending on data size.
+
+if(!file.exists(work.dir)){
+  cat("work directory you typed in is not existing\n")
+}else{
+  setwd(work.dir)
+  cat("work directory exists!\n")
+}
+
+cat(paste0("work.dir: "), getwd(), "\n")
+
+cat("Done with work.dir setup\n")
+
+######################################################################
+### 2 folders and 2 supporting files#########
+dir_variantCounts="variantCounts/"
+dir_cdnCounts="codonCounts/"
+sampleAnnot = read_csv("SampleAnnot.csv")
+codonDesigned <- read_csv("Intended_codon_list_1col.csv")
+######################################################################
+
+
+lowCountCutForRef=1 # counts equal or below this will be filtered out.  0 or 1 allows all species
+lowCountCutForTreatment=1 # counts equal or below this will be filtered out.  0 or 1 allows all species
+
+
+codons.per.pos=22 #if If the 'codonDesigned' is nor populated, this will use to calculate top abundant variants as the 'intended'
+samples.for.rank=c(pDNASample,pDNASample,refSamples) # pick 3 samples of pDNA, ETP. These samples may be used to trim the data by removing millions of low-count variants. If you don't have 3 samples, you may repeat one trice.
+
+contrl.pos=NULL
+
+
+sampleAnnot_short<-unique(data.frame(
+  "Sample"=str_sub(sampleAnnot$Sample, 1,8),
+  "Experiment"=sampleAnnot$Experiment))
+
+sampleAnnot_long<-sampleAnnot_short%>%
+  mutate(Experiment_Sample=str_c(Experiment,Sample,sep='_'))%>%
+  select(Sample,Experiment_Sample)
+names(sampleAnnot_long)=c("Sample", "Experiment")
+
+
+if(!dir.exists(paste0(dir_variantCounts,"outbox_",screenNM,"_by_vtCounts/"))){
+  dir.create(file.path(paste0(dir_variantCounts,"outbox_",screenNM,"_by_vtCounts/")))
+}
+dir_wrt_variantCounts=paste0(dir_variantCounts,"outbox_",screenNM,"_by_vtCounts/")
+
+if(!dir.exists(paste0(dir_cdnCounts,"outbox_",screenNM,"_by_cdnCounts/"))){
+  dir.create(file.path(paste0(dir_cdnCounts,"outbox_",screenNM,"_by_cdnCounts/")))
+}
+dir_wrt_cdnCounts=paste0(dir_cdnCounts,"outbox_",screenNM,"_by_cdnCounts/")
+
+
+logfileName<-paste(dir_wrt_variantCounts,"logFile.txt", sep='')
+
+cat(paste0("\n", Sys.Date(),":"), file=logfileName, sep="\n",append=TRUE)
+cat("Analysis parameters:", file=logfileName, sep="\n",append=TRUE)
+cat(paste0("dir_variantCounts: ",dir_variantCounts), file=logfileName, sep="\n",append=TRUE)
+cat(paste0("dir_cdnCounts: ",dir_cdnCounts), file=logfileName, sep="\n",append=TRUE)
+
+cat(paste0("refSamples: ",refSamples), file=logfileName, sep="\n",append=TRUE)
+cat(paste0("lowCountCutForRef: ", lowCountCutForRef), file=logfileName, sep="\n",append=TRUE)
+cat(paste0("lowCountCutForTreatment: ", lowCountCutForTreatment), file=logfileName, sep="\n",append=TRUE)
+
+
+
 
 ############## FUNCTIONS #################
 codonTable<-tibble(
@@ -84,13 +167,11 @@ FromVariantCountToCodon_return9cols_callWithMatrix2<-function(input_str, wt_mtx=
     cat(paste("Done: ", round((iteration/N) * 100,0),'%\n'))
   } 
   
-  #cat(paste0("FromVariant_return9cols: ", str_in,"\n"))
+
   #set wt nt matrix with 5 additional positions to catch the end of ORF
   wt_lt<-as.matrix(wt_mtx)
   orf_size<-dim(wt_lt)[1]-5
-  
-  #cat("input orfsize=", orf_size, ", mat_dim =", dim(wt_lt), "\n")
-  #str_in=c("128:->A, 128:->T, 128:->G")
+
   num.calls<-str_count(str_in,">")
   calls<-c()
   if(str_detect(str_in,",")){
@@ -133,8 +214,6 @@ FromVariantCountToCodon_return9cols_callWithMatrix2<-function(input_str, wt_mtx=
     nth_nt_in_cdn<-NULL
     
     call_single<-calls[[1]][n]
-    # groupType=ifelse(str_detect(call_single,">-"), "del", 
-    #                  ifelse(str_detect(str_in,"->"),"ins","sub"))
     ntPOS=as.numeric(substr(call_single,1,str_locate(call_single,":")[,1]-1))-off.set
     
     change_from<-substr(call_single,nchar(call_single)-2,nchar(call_single)-2)
@@ -146,9 +225,6 @@ FromVariantCountToCodon_return9cols_callWithMatrix2<-function(input_str, wt_mtx=
     if(change_from != "-" & change_from != wt_lt[cdnPOS,nth_nt_in_cdn]){
       cat("Change_from is not reference base:", call_single, "reference=",wt_lt[cdnPOS,nth_nt_in_cdn],"\n")
       stopifnot(wt_lt[cdnPOS,nth_nt_in_cdn] == 0)
-      #       if(wt_lt[cdnPOS,nth_nt_in_cdn] !=0){
-      #   exit 
-      # }
     }
     
     if(POS_list_to[[cdnPOS]][nth_nt_in_cdn]!="*"){
@@ -209,11 +285,6 @@ FromVariantCountToCodon_return9cols_callWithMatrix2<-function(input_str, wt_mtx=
       POS_list_to[[p]][2]=paste0(POS_list_to[[p]][2],wt_lt[p,2])
     }
     
-    # if(!is.na(str_locate(POS_list_from[[p]][2],"-")[1])){
-    #   POS_list_from[[p]][2]=paste0(POS_list_from[[p]][2],wt_lt[p,2])
-    #   POS_list_to[[p]][2]=paste0(POS_list_to[[p]][2],wt_lt[p,2])
-    # }
-    
     if(POS_list_from[[p]][3] == strrep("-",nchar(POS_list_from[[p]][3]))){
       POS_list_from[[p]][3]=paste0(POS_list_from[[p]][3],wt_lt[p,3])
       POS_list_to[[p]][3]=paste0(POS_list_to[[p]][3],wt_lt[p,3])
@@ -260,11 +331,6 @@ FromVariantCountToCodon_return9cols_callWithMatrix2<-function(input_str, wt_mtx=
   return(c(str_in, all, key, ps, froms, tos, nt_ins, nt_del, ps_mn, fs))
   
 }
-# 
-# FromVariantCountToCodon_return9cols_callWithMatrix2("input_str"="2419:->G, 2419:->T, 2419:->T, 2419:A>T, 2432:G>C/10", "wt_mtx"=wt_lt, "off.set"=off.set)
-# 
-# 
-# FromVariantCountToCodon_return9cols_callWithMatrix2("input_str"="2419:->G, 2419:->T, 2432:G>C/10", "wt_mtx"=wt_lt, "off.set"=off.set)
 
 FromRawToPercent_cbindRawCounts <- function(rawFile, codonTb, colStart, colEnd) {
   ###take rawfile(POS/CODON/COUNT) to get fractionfiles, w or wo wt, cbind to the raw columns
@@ -285,7 +351,6 @@ FromRawToPercent_cbindRawCounts <- function(rawFile, codonTb, colStart, colEnd) 
   samples_frctn<-str_c(samples,'_frctn',sep='')
   
   ###########
-  #iris %>% mutate_at(.cols=vars(-Species), .funs=funs(mysum = sum(.))) %>% head()
   fraction<-function (x){x/sum(x)}
   
   wf0<-wf
@@ -323,13 +388,11 @@ FromRawToPercent_cbindRawCounts <- function(rawFile, codonTb, colStart, colEnd) 
   wf_inPerct_wo_wt$X<-NULL
   wf_inPerct_wo_wt$Rank<-NULL
   
-  # wf_inPerct<-wf_inPerct[-1] ##remove X column
   return(list("wf_fraction_wo_wt"=wf_inPerct_wo_wt, "wf_fraction_w_wt"=wf_inPerct_w_wt))
 }
 #####
 
 GetPrimaryKey_theKey_theDeltaNt <- function(keys_itr,keyList=IntendedKey,wtCdns=wtCdns){
-  ###from key it returns primarykeys(all intended pasted), theKey(best deltaNT one), and the deltaNT of theKey
   keys_itr=as.character(keys_itr)
   str_in<-as.character(str_split(keys_itr, "/")[[1]][1])
   iteration<-as.numeric(str_split(keys_itr, "/")[[1]][2])
@@ -337,7 +400,6 @@ GetPrimaryKey_theKey_theDeltaNt <- function(keys_itr,keyList=IntendedKey,wtCdns=
   if(iteration %% (floor(M/1000)*100) == 0){
     cat(paste("Done: ", round((iteration/M) * 100,0),'%\n'))
   } 
-  #cat(paste0("GetPrimaryKey_theKey_theDeltaNt: ", str_in,"\n"))
   keyList=as.vector(keyList)
   wtCdns=as.vector(wtCdns)
   num.calls<-str_count(str_in,",")+1
@@ -367,9 +429,7 @@ GetPrimaryKey_theKey_theDeltaNt <- function(keys_itr,keyList=IntendedKey,wtCdns=
       pos<-as.numeric(str_split(str_in, "\\|")[[1]][1])
       vtCdn<-as.character(str_split(str_in, "\\|")[[1]][2])
       delta<-stringdist(wtCdns[pos],vtCdn,method = "hamming")
-      #      return(list(primarykey,theKey,delta))
     }
-    #return(list(primaryKey=primaryKey,theKey=theKey,maxDelta=delta))
     outstr<-paste(primaryKey,theKey,delta,sep=";")
     return(outstr)
   }
@@ -408,20 +468,14 @@ GetPrimaryKey_theKey_theDeltaNt <- function(keys_itr,keyList=IntendedKey,wtCdns=
     }
   }
   
-  #cat("primaryKey=")
-  #cat(primaryKey)
-  # cat("\n")
-  
   if(is.na(primaryKey)==TRUE){
     outstr<-"NA;NA;NA"
     return(outstr)
-    #return(list(primaryKey=NA,theKey=NA,maxDelta=NA))
   }else{
     maxDelta=max(deltas,na.rm=TRUE)
     theKey<-primaryKeys[which.max(deltas)]
     outstr<-paste(primaryKey,theKey,maxDelta,sep=";")
     return(outstr)
-    #return(list(primaryKey=primaryKey,theKey=theKey,maxDelta=max(deltas,na.rm=TRUE)))
   }
 }
 
@@ -440,7 +494,7 @@ func_hist_from_raw <- function (fileIn, column, col='black', txhi=0, breaks=50){
   workFile2<-workFile1[workFile1$G0SumNorm>0,] ###count out 0 for avg...
   avg<-round(mean(workFile2[[column]]),1)
   
-  g<-ggplot(workFile1, aes(G0SumNorm))+xlab(paste('log2Norm','(',column, '); avg ', avg,'reads', by=''))
+  g<-ggplot(workFile1, aes(G0SumNorm))+xlab(paste('log2Norm','(',column, ')', by=''))
   g<-g+theme(axis.text=element_text(size=8),
              axis.title=element_text(size=10,face="bold"))
   g<-g+geom_histogram(breaks=breaks, colour ="black",fill=col1) 
@@ -513,14 +567,12 @@ fracFunNoBlueNoLabel_colArg_generic_auc <- function (fileIn, columns, filterColu
     subset_inputFile <- inputFile;
   }
   subset_inputFile$tmp_sum<-subset_inputFile[[columnList[1]]];
-  #str(subset_inputFile);
   if(length(columnList)>1){
     for (i in 2:length(columnList)){
       col <- columnList[i];
       subset_inputFile$tmp_sum <- subset_inputFile$tmp_sum + subset_inputFile[[col]];
     }
   }
-  #str(subset_inputFile);
   sorted_subset_inputFile <- subset_inputFile[order(-subset_inputFile$tmp_sum),]
   sorted_subset_inputFile$readFraction <- sorted_subset_inputFile$tmp_sum/sum(sorted_subset_inputFile$tmp_sum)
   sorted_subset_inputFile$cumsum <- cumsum(sorted_subset_inputFile$tmp_sum)
@@ -540,7 +592,6 @@ fracFunNoBlueNoLabel_colArg_generic_auc <- function (fileIn, columns, filterColu
     geom_point(colour=col1, pch=1, cex=ifelse(sorted_subset_inputFile$cumsumFraction==1, 5*pch1, pch1))
   g<-g+theme(axis.text=element_text(size=8),
              axis.title=element_text(size=10,face="bold"))
-  #g=g+geom_text(label=paste(columnList, 'auc=', a, sep=' '),cex=3, x=0.5, y=0.2);
   return (list("auc"=a,"gph"=g))
 }
 
@@ -550,69 +601,31 @@ renameSample2Experiment<-function (dataFile, annotFile){
   nms=names(df)
   for(i in 1:dim(df)[2]){
     if(str_sub(nms[i],1,6)=='Sample'){
-      nms=gsub(str_sub(nms[i],1,8),annotF[sampleAnnot$Sample==str_sub(nms[i],1,8),]$Experiment, nms)
+      nms=gsub(str_sub(nms[i],1,8),annotF[sampleAnnot_short$Sample==str_sub(nms[i],1,8),]$Experiment, nms)
     }
   }
   names(df)<-nms
   return(df)
 }
 
-
-
 ############## END OF FUNCTIONS #################
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-if(!dir.exists(paste0(dir_variantCounts,"outbox_",screenNM,"/"))){
-  dir.create(file.path(paste0(dir_variantCounts,"outbox_",screenNM,"/")))
-}
-dir_wrt_variantCounts=paste0(dir_variantCounts,"outbox_",screenNM,"/")
-
-if(!dir.exists(paste0(dir_cdnCounts,"outbox_",screenNM,"/"))){
-  dir.create(file.path(paste0(dir_cdnCounts,"outbox_",screenNM,"/")))
-}
-dir_wrt_cdnCounts=paste0(dir_cdnCounts,"outbox_",screenNM,"/")
-
-
 variantCountsfiles =
-  list.files(path = dir_variantCounts, pattern = '.variantCounts$', all.files = FALSE,
+  list.files(path = dir_variantCounts, pattern = '\\.variantCounts$', all.files = FALSE,
              full.names = FALSE, recursive = FALSE,
              ignore.case = FALSE, include.dirs = FALSE, no.. = FALSE)
 
 
-outBox_VrtCt <- paste0(dir_variantCounts,"outBox_",lowCountCutForRef,"refSampleCtCutOff_",Sys.Date(),"/")
-if(!dir.exists(path=outBox_VrtCt)){
-  print ("new folder need to make")
-  dir.create(path=outBox_VrtCt,mode="0777", showWarnings = TRUE)
-}
+outBox_VrtCt <- paste0(dir_variantCounts,"outbox_", screenNM, "_by_vtCounts/")
+dir.create(path=outBox_VrtCt,mode="0777", showWarnings = TRUE)
 
 
-vtCtTblfolder <- paste0(outBox_VrtCt,"variantCountsTables_",
-                  lowCountCutForRef,"RefCtCutOff_", lowCountCutForTreatment,"others/")
+vtCtTblfolder <- paste0(dir_variantCounts,"vtCounts_InTables_savedHere/")
+dir.create(path=vtCtTblfolder,mode="0777", showWarnings = TRUE)
 
-if(!dir.exists(path=vtCtTblfolder)){
-  print ("new folder need to make")
-  dir.create(path=vtCtTblfolder,mode="0777", showWarnings = TRUE)
-}
-
-#for(i in 1:3){
 for(i in 1:length(variantCountsfiles)){
-  if(!str_detect(variantCountsfiles[i],'.variantCounts$')){next}
+  if(!str_detect(variantCountsfiles[i],'\\.variantCounts$')){next}
   sampl=str_sub(variantCountsfiles[i],str_locate(variantCountsfiles[i],'Sample')[1],str_locate(variantCountsfiles[i],'Sample')[1]+7)
   tmp_df<-NULL
   path0=paste0(dir_variantCounts,variantCountsfiles[i])
@@ -632,10 +645,11 @@ for(i in 1:length(variantCountsfiles)){
       filter(as.numeric(V1)>lowCountCutForTreatment)
   }
   
+  write.csv(tmp_df,paste0(vtCtTblfolder,variantCountsfiles[i],".tbl"))
   print(paste0("Done reading in :",variantCountsfiles[i]))
   print(dim(tmp_df))
   
-  write.csv(tmp_df,paste0(vtCtTblfolder,variantCountsfiles[i],".tbl"))
+
 }
 
 ###Done parsing .varriantCoounts into a 9-cols. table
@@ -647,44 +661,52 @@ variantCountsTblfiles =
              ignore.case = FALSE, include.dirs = FALSE, no.. = FALSE)
 
 
-vtCtTblConslFolder <- paste0(outBox_VrtCt,"variantCountsTables_consolidated_",lowCountCutForRef,"RefCtCutOff_", lowCountCutForTreatment,"others/")
+vtCtTblConslFolder <- paste0(dir_variantCounts,"vtCounts_InTables_consolidated_SavedHere/")
+dir.create(path=vtCtTblConslFolder,mode="0777", showWarnings = TRUE)
 
-if(!dir.exists(path=vtCtTblConslFolder)){
-  print ("new folder need to make")
-  dir.create(path=vtCtTblConslFolder,mode="0777", showWarnings = TRUE)
-}
+
 
 samplesInData<-unique(str_sub(variantCountsTblfiles,
                               str_locate(variantCountsTblfiles,'Sample')[1],str_locate(variantCountsTblfiles,'Sample')[1]+7))
-
 
 for(j in (1:length(samplesInData))){
   df_consl_tmp<-data.frame()
   for(k in (1:length(variantCountsTblfiles))){
     if(!str_detect(variantCountsTblfiles[k],samplesInData[j])){next}
-    df_in_tmp<-read_csv(paste0(vtCtTblfolder,variantCountsTblfiles[k]))%>%
-      select(V1,V2,WtLen,V4,V5,V6,V7,V8,V9)
+    
+    df_in_tmp<-read_csv(paste0(vtCtTblfolder,variantCountsTblfiles[k]))
+    
+    df_in_tmp<-df_in_tmp%>%
+    select(V1,V2,WtLen,V4,V5,V6,V7,V8,V9)
     summary(df_in_tmp)
     print(paste0("Done with: ",variantCountsTblfiles[k]))
     print(dim(df_in_tmp))
     
+    cat(paste0("Done with: ",variantCountsTblfiles[k]), file=logfileName, sep="\n",append=TRUE)
+    cat(dim(df_in_tmp), file=logfileName, sep="\n",append=TRUE)
+    
+
+
     if(dim(df_consl_tmp)[1]<1){
       df_consl_tmp=df_in_tmp
-    }else{
-      df_consl_tmp=rbind(df_consl_tmp,df_in_tmp)
-    }
-  }
-  
+  }else{
+    df_consl_tmp=rbind(df_consl_tmp,df_in_tmp)
+   }
+}
+
   df_consl_tmp_aggd<-df_consl_tmp%>%
     select(V1,V2,WtLen,V4,V5,V6,V7,V8,V9)%>%
-    group_by(V4,V5,V6,V7,V8,V9)%>%
-    summarise(V1=sum(V1,na.rm = TRUE),
+    dplyr::group_by(V4,V5,V6,V7,V8,V9)%>%
+    dplyr::summarise(V1=sum(V1,na.rm = TRUE),
               V2=sum(V2,na.rm = TRUE),
               WtLen=sum(WtLen,na.rm = TRUE))
-  
+
   write.csv(df_consl_tmp_aggd,paste0(vtCtTblConslFolder,samplesInData[j],".consolidatedTbl"))
+
   print(paste0("Done with: ",samplesInData[j]))
   print(dim(df_consl_tmp_aggd))
+  cat(paste0("Done with: ",samplesInData[j]), file=logfileName, sep="\n",append=TRUE)
+  cat(dim(df_consl_tmp_aggd), file=logfileName, sep="\n",append=TRUE)
 }
 
 ####Done with consolidating multiiple lanes of data.  
@@ -694,12 +716,6 @@ consol_sample_files =
   list.files(path = vtCtTblConslFolder, pattern = NULL, all.files = FALSE,
              full.names = FALSE, recursive = FALSE,
              ignore.case = FALSE, include.dirs = FALSE, no.. = FALSE)
-
-# outBox_VrtCt <- paste0(dir_variantCounts,"outBox_",lowCountCutForRef,"refSampleCtCutOff_",Sys.Date(),"/")
-# if(!dir.exists(path=outBox_VrtCt)){
-#   print ("new folder need to make")
-#   dir.create(path=outBox_VrtCt,mode="0777", showWarnings = TRUE)
-# }
 
 
 df_in1<-data.frame()
@@ -725,6 +741,8 @@ for(i in(1:length(consol_sample_files))){
     df_in1<-merge(df_in1,tmp_df, by.x=c("changes","variant","cdn.changes.by.Ted","Vt.Cdn.By.Ted","Vt.aa.By.Ted","StdNom.Vt.aa.By.Ted"), by.y=c("changes","variant","cdn.changes.by.Ted","Vt.Cdn.By.Ted","Vt.aa.By.Ted","StdNom.Vt.aa.By.Ted"), all=TRUE)
   }
   cat(paste0("done with:",smp," nrow=", dim(df_in1)[1],"\n"))
+  cat(paste0("done with:",smp," nrow=", dim(df_in1)[1],"\n"), file=logfileName, sep="\n",append=TRUE)
+  
 }
 
 
@@ -734,26 +752,9 @@ df_in<-df_in1 %>%
 df_in$X<-NULL
 names(df_in)
 
-
-write.csv(df_in, file=paste0(dir_wrt_variantCounts,"All_variantCounts_aggd.csv"))
-
-##########33##########################
-
-
-
-
-
-#similarly to .variantCounts
-##dir for .codonCounts
-#make your .codonCounts file names in this format, and place them in a folder for the parser to access.
-#1_CJNC2.1.Sample01_KRASG12C.codonCounts
-#where 1_CJNC2.1. is lane.flowcell.lane.
-#where Sample01 is generic sample number.
-
-
-
+#########
 codonCountsfiles =
-  list.files(path = dir_cdnCounts, pattern =".codonCounts$", all.files = FALSE,
+  list.files(path = dir_cdnCounts, pattern ="\\.codonCounts$", all.files = FALSE,
              full.names = FALSE, recursive = FALSE,
              ignore.case = FALSE, include.dirs = FALSE, no.. = FALSE)
 
@@ -761,67 +762,73 @@ codonCountsfiles =
 samplesInCdnData<-unique(str_sub(codonCountsfiles,
                                  str_locate(codonCountsfiles,'Sample')[1],str_locate(codonCountsfiles,'Sample')[1]+7))
 
-cdnCount_outBox <- paste0(dir_cdnCounts,"codonCounts_outBox/")
-if(!dir.exists(path=cdnCount_outBox)){
-  print ("new folder need to make")
-  dir.create(path=cdnCount_outBox,mode="0777", showWarnings = TRUE)
-}
+
+cdnCount_consol_outBox <- paste0(dir_cdnCounts,"cdnCounts_inTables_savedHere/")
+dir.create(path=cdnCount_consol_outBox,mode="0777", showWarnings = TRUE)
+
+cdnByWellLane_df<-data.frame()
 
 for(j in 1:length(samplesInCdnData)){
-  tmp_tbl_aggd<-data.frame()
+  cdnByWell_tmp<-data.frame()
   for (k in 1:length(codonCountsfiles)){
-    if(!str_detect(codonCountsfiles[k],'.codonCounts$')){next}
+    if(!str_detect(codonCountsfiles[k],'\\.codonCounts$')){next}
     if(!str_detect(codonCountsfiles[k],samplesInCdnData[j])){next}
-    tmp_tbl=read.delim(paste0(dir_cdnCounts,codonCountsfiles[k]))[1:64]
-    if(dim(tmp_tbl_aggd)[1]<1){
-      tmp_tbl_aggd=tmp_tbl
+    smp=str_sub(codonCountsfiles[k],
+                str_locate(codonCountsfiles[k],'Sample')[1],str_locate(codonCountsfiles[k],'Sample')[1]+7)
+
+    if(dim(cdnByWell_tmp)[1]<1){
+      cdnByWell_tmp=read.delim(paste0(dir_cdnCounts,codonCountsfiles[k]))[,1:64]
     }else{
-      tmp_tbl_aggd=tmp_tbl_aggd+tmp_tbl
+      cdnByWell_tmp=read.delim(paste0(dir_cdnCounts,codonCountsfiles[k]))[,1:64]+cdnByWell_tmp[,1:64]
     }
+    
   }
-  write_csv(tmp_tbl_aggd,paste0(cdnCount_outBox,samplesInCdnData[j],".cdnConsolidated"))
-}
-
-codonCountsConsolfiles =
-  list.files(path = cdnCount_outBox, pattern =".cdnConsolidated$", all.files = FALSE,
-             full.names = FALSE, recursive = FALSE,
-             ignore.case = FALSE, include.dirs = FALSE, no.. = FALSE)
-
-cdn_df<-data.frame()
-for(i in (1:length(codonCountsConsolfiles))){
-  smp=str_sub(codonCountsConsolfiles[i],1,8)
-  cdntf_in=read_csv(paste0(cdnCount_outBox,codonCountsConsolfiles[i]))
+  
+  ####
+  write_csv(cdnByWell_tmp,paste0(cdnCount_consol_outBox,samplesInCdnData[j],".cdnTbl"))
+  cdntf_in=cdnByWell_tmp
+  names(cdntf_in)
   cdntf_in$X<-NULL
   cdntf_in$X1<-NULL
   cdntf_in$POS=row.names(cdntf_in)
-  tmp.m=melt(cdntf_in,value.name = smp, variable.name = 'AA_codon')
   
-  if(dim(cdn_df)[1]<1){
-    cdn_df=tmp.m
+  tmp.m=melt(cdntf_in,value.name = smp, variable.name = 'AA_codon')
+  names(tmp.m)
+  names(cdnByWellLane_df)
+  if(dim(cdnByWellLane_df)[1]<1){
+    cdnByWellLane_df=tmp.m
   } else{
-    cdn_df<-merge(cdn_df,tmp.m,by=c('POS','AA_codon'), all=TRUE)
+    cdnByWellLane_df<-merge(cdnByWellLane_df,tmp.m,by=c('POS','AA_codon'), all=TRUE)
   }
-}
+  #####
+ }
+  
+names(cdnByWellLane_df)
 
 ##rename the col.names
-
-if(exists("sampleAnnot")){
+cdn_df<-cdnByWellLane_df
+names(cdn_df)
+cdn_df0<-cdn_df
+if(exists("sampleAnnot_long")){
   NewNamescdn<-c()
   for (x in 1:dim(cdn_df)[2]){
     NewNamescdn<-c(NewNamescdn,
-                   ifelse(!is.element(names(cdn_df)[x], sampleAnnot$Sample),names(cdn_df)[x], as.character(sampleAnnot[sampleAnnot$Sample==names(cdn_df)[x],]$Experiment)))
+                   ifelse(!is.element(names(cdn_df)[x], sampleAnnot_long$Sample),names(cdn_df)[x], 
+                          as.character(str_sub(sampleAnnot_long[sampleAnnot_long$Sample==names(cdn_df)[x],]$Experiment))))
+    
   }
   names(cdn_df)=NewNamescdn
 }
 
-write.csv(cdn_df,paste0(cdnCount_outBox,"codonCount_theSingleFile.csv"))
-
-
-
+names(cdn_df)
+names(cdn_df0)
+dim(cdn_df)
+dim(cdn_df0)
 
 ######################## check if orf template is right
-wf_0cdn<-read.csv(paste0(cdnCount_outBox,"codonCount_theSingleFile.csv"))
-wf_0cdn$X<-NULL
+wf_0cdn<-cdn_df0
+names(wf_0cdn)
+
 
 wtCdn_detected<-wf_0cdn%>%
   dplyr::group_by(POS) %>%
@@ -860,8 +867,6 @@ if(exists("codonDesigned")){
   IntendedKey <- as.vector(as.character(codonDesigned$key))
 } else{IntendedKey <-NULL}
 
-
-#cat (ORF_Amplicon)
 
 left_flnk=strsplit(ORF_Amplicon,"\\[")[[1]][1]
 orfseq=strsplit(strsplit(ORF_Amplicon,"\\[")[[1]][2],"\\]")[[1]][1]
@@ -903,9 +908,8 @@ for(r in 1:orf_size){
 }
 
 dim(wt_lt)
-#### wt_lt is now a matrix holding single nt. will be used to call parser
-####
-#1_HKWYHDSXX.1.Sample01_PPM1D.variantCounts
+#### wt_lt is now a matrix holding single nt. will be used to call the parser
+
 date_str<-format(Sys.time(), "%Y%m%d")
 
 cat("Done with Chunks prior to read_in_variantCounts\n")
@@ -914,32 +918,38 @@ cat("Done with Chunks prior to read_in_variantCounts\n")
 
 if(TemplateORFSeq_bypDNASeq==orfseq){
   cat("\nTemplateORFSeq_bypDNASeq MATCHES: GOOD NEWS!\n")
+  cat("\nTemplateORFSeq_bypDNASeq MATCHES: GOOD NEWS!\n", file=logfileName, sep="\n",append=TRUE)
 } else{  cat("\nTemplateORFSeq_bypDNASeq DO NOT MATCH ****\nTemplateORFSeq_bypDNASeq:\n")
+  cat("\nTemplateORFSeq_bypDNASeq DO NOT MATCH ****\nTemplateORFSeq_bypDNASeq:\n", file=logfileName, sep="\n",append=TRUE)
   cat(TemplateORFSeq_bypDNASeq)
+  cat(TemplateORFSeq_bypDNASeq, file=logfileName, sep="\n",append=TRUE)
+  
   cat("\nORFseq assumption:\n")
+  cat("\nORFseq assumption:\n", file=logfileName, sep="\n",append=TRUE)
+  
   cat(orfseq)
+  cat(orfseq, file=logfileName, sep="\n",append=TRUE)
+  
   cat("\n")
+  cat("\n", file=logfileName, sep="\n",append=TRUE)
+  
   nt_diff<-as.data.frame(list.string.diff("a"=orfseq, "b"=TemplateORFSeq_bypDNASeq))
   cat("List of discrepancies: seq.a=assumed; seq.b=actual\n")
+  cat("List of discrepancies: seq.a=assumed; seq.b=actual\n", file=logfileName, sep="\n",append=TRUE)
   print(nt_diff)
+  cat(nt_diff, file=logfileName, sep="\n",append=TRUE)
+
+  
 }
 #########################
 
-
-
-
-if(!exists("df_in")){
-  df_in<-read.csv(file=paste0(dir_wrt_variantCounts,"All_variantCounts_aggd.csv"))
-}
-df_in$X<-NULL
-
-#names(df_in)
+names(df_in)
 
 df_in_wGroupType<-df_in%>%
   mutate(groupType=ifelse(str_detect(variant,">-") & str_detect(variant,"->"), "ins_del", ifelse(str_detect(variant,">-"),"del", ifelse(str_detect(variant,"->"),"ins","sub"))))%>%
   mutate(nt_changes=str_count(variant,",")+1)
 
-sampleNMs<-sampleAnnot[!str_detect(str_to_upper(sampleAnnot$Experiment),'HOP')]$Sample
+sampleNMs<-sampleAnnot_short$Sample
 smp_ls<-paste0(sampleNMs,".ct")
 smp_ls_ref<-paste0(sampleNMs,".ref_ct")
 smp_ls_frctn<-paste0(sampleNMs,".frctn")
@@ -947,19 +957,24 @@ smp_ls_frctn<-paste0(sampleNMs,".frctn")
 ##############
 df_in$X<-NULL
 #names(df_in)
+df_in<-df_in%>%
+  select(variant, changes, cdn.changes.by.Ted, Vt.Cdn.By.Ted, Vt.aa.By.Ted, StdNom.Vt.aa.By.Ted, everything())
+names(df_in)
 
-top.nth=1000000 # down to top million 
-
-row.has.low.refct.all <- apply(df_in[,seq(8,dim(df_in)[2]-1,by=3)], 1, function(x){all(is.na(x) | x<10000)})
+num.samples=seq(8,dim(df_in)[2]-1,by=3)
+tmp_df<-data.frame()
+if(length(num.samples)==1){
+  tmp_df=df_in[,c(num.samples,num.samples)]
+} else{
+  tmp_df=df_in[,num.samples]
+}
+#If a variant in all Samples either gets no counts, or its reference counts are low, this variant is filtered out.
+row.has.low.refct.all <- apply(tmp_df, 1, function(x){all(is.na(x) | x<10000)})
 
 sum(row.has.low.refct.all)
 
-#names(row.has.low.refct.all)
-
 samples.for.rank.ct=str_c(samples.for.rank, ".ct", sep = '')
 samples.for.rank.ref=str_c(samples.for.rank, ".ref_ct", sep = '')
-
-
 
 df_in_ex_low_ct<-df_in[!row.has.low.refct.all,]
 
@@ -995,7 +1010,6 @@ if(!is.null(clonalSample)){
 
 ######Done with correction
 
-#names(df_in_annotated_frctn_corrctd)
 dim(df_in_annotated_frctn_corrctd)
 pDNASample.ct<-paste0(pDNASample, ".ct")
 pDNASample.corrctd<-paste0(pDNASample, ".ct_frctn_corrctd")
@@ -1018,20 +1032,21 @@ df_in_annotated_frctn_corrctd<-df_in_annotated_frctn_corrctd%>%
   select(variant,POS,rank.by.pDNA,rank.by.corrected.pDNA,groupType,nt_change,ntPOS,nth_nt_in_cdn,everything()) %>%
   arrange(POS)
 
-#names(df_in_annotated_frctn_corrctd)#678097
 table(df_in_annotated_frctn_corrctd$groupType)
 
-# 
-#     del     ins ins_del     sub 
-#  244963   78216   45845  421587 
-
 cat("Done with: plotting abundance \n\n Next up: 10-column annotation\n\n")
+cat("Done with: plotting abundance \n\n Next up: 10-column annotation\n\n", file=logfileName, sep="\n",append=TRUE)
 
-#names(df_in_annotated_frctn_corrctd)
+#############
 df9<-df_in_annotated_frctn_corrctd
+names(df9)
+summary(df9)
+df9_1<-data.frame("variant"=as.character(df9$variant),"iteration"=1:dim(df9)[1]) 
+summary(df9_1)
+df9_1$variant_itr=str_c(df9_1$variant,df9_1$iteration,sep="/")
 
-df9_1<-data.frame(cbind("variant"=as.character(df9[,1]),"iteration"=1:dim(df9)[1])) %>%
-  mutate(variant_itr=str_c(variant,iteration,sep="/")) %>%
+
+df9_1<-df9_1%>%
   select(variant_itr)
 
 N=dim(df9_1)[1]
@@ -1041,8 +1056,8 @@ names(df_variant2details)<-c("variant","variant_newName","keys", "cdn.positions"
 
 dim(df9)
 dim(df_variant2details)
-############
-write.csv(df_variant2details, file=paste0(dir_wrt_variantCounts,"df_variant2details.csv"))
+
+###########
 
 df_variant2details$variant<-as.character(df_variant2details$variant)
 df9$variant<-as.character(df9$variant)
@@ -1050,6 +1065,8 @@ df9$variant<-as.character(df9$variant)
 df10<-merge(df_variant2details,df9,by="variant",all=TRUE)
 
 cat("Done with: filterig data and adding 9-col annotations and df_variant2details.csv is saved\n")
+
+cat("Done with: filterig data and adding 9-col annotations and df_variant2details.csv is saved\n", file=logfileName, sep="\n",append=TRUE)
 
 # below is for cases that the designed codon information is not available
 group.names<-c()
@@ -1101,21 +1118,24 @@ if (!exists("codonDesigned")){
   
   
   cat("using abundance of detected variants to determine the said variant is planned or not\n")
+  cat("using abundance of detected variants to determine the said variant is planned or not\n", file=logfileName, sep="\n",append=TRUE)
+  
 } else {
   IntendedKey<-as.vector(as.character(codonDesigned$key))
   cat("using design file for Intended/Unintended classification\n")}
+cat("using design file for Intended/Unintended classification\n", file=logfileName, sep="\n",append=TRUE)
+
 
 cat(paste0("Intended Variants: ", length(IntendedKey)))
+cat(paste0("Intended Variants: ", length(IntendedKey)), file=logfileName, sep="\n",append=TRUE)
 
 cat("\nDone with: library design info\n Next up: process  cdonCounts for ORFCall version analysis, including ORF template sequence validation, clustering, AUC curves etc\n")
+cat("\nDone with: library design info\n Next up: process  cdonCounts for ORFCall version analysis, including ORF template sequence validation, clustering, AUC curves etc\n", file=logfileName, sep="\n",append=TRUE)
+
 
 
 ######################
 library(reshape2)
-###When need to rerun from saved file ..all_aggrgated, you will need restruct this file wf_0cdn
-#names(wf_scaledToFraction_cdn_woWt)
-
-######Very important file, should write out.
 
 ###sum up codon counts in .cdn files
 wf_renamedCdn<-wf_0cdn
@@ -1129,15 +1149,20 @@ cdnCountSum$sample <- rownames(cdnCountSum)
 cdnCountSum <- cdnCountSum %>%
   select("sample"=sample, "cdnSum"=cdnSum)
 
-sampleNMs<-sampleAnnot$Experiment
-levelOrder<-sampleNMs
-cdnCountSum$sample<-factor(cdnCountSum$sample, levels=levelOrder)
+names(wf_renamedCdn)
 
-write.csv(cdnCountSum, file=paste0(dir_wrt_cdnCounts,"ORFcallOfAnalyzeSatMut_cdnCountSumPerSample.csv"))
+names(cdnCountSum)
+wf_renamedCdn<-renameSample2Experiment(wf_renamedCdn,sampleAnnot_long)
+names(wf_renamedCdn)
 
-summary(cdnCountSum)
+cdnCountSum.m<-merge(cdnCountSum,sampleAnnot_long,by.x="sample",by.y='Sample', all=TRUE )%>%
+  arrange(sample)
 
-G1<-ggplot(cdnCountSum)+
+write.csv(cdnCountSum.m, file=paste0(dir_wrt_cdnCounts,"ORFcallOfAnalyzeSatMut_cdnCountSumPerSample.csv"))
+
+summary(cdnCountSum.m)
+
+G1<-ggplot(cdnCountSum.m)+
   geom_col(mapping=aes(x=as.factor(sample), y=cdnSum))+
   coord_flip()
 ggsave(filename=paste0(dir_wrt_cdnCounts,"ORFcallOfAnalyzeSatMut_cdnCountSumPerSample.pdf"))
@@ -1154,16 +1179,21 @@ wf_tmpCdn<-wf_renamedCdn %>%
   select("POS"=POS, "CODON"=AA_codon, everything())
 
 names(wf_tmpCdn)
-
+wf_tmpCdn$padding=wf_tmpCdn[,3]
 
 ls_scaled<-FromRawToPercent_cbindRawCounts("rawFile"=wf_tmpCdn,
                                            "codonTb"=codonTable, 
                                            "colStart"=3,
-                                           "colEnd"=dim(wf_tmpCdn)[2])
+                                           "colEnd"=dim(wf_tmpCdn)[2]-1)
 
 
-wf_scaledToFraction_cdn_woWt<-ls_scaled$wf_fraction_wo_wt  
+wf_scaledToFraction_cdn_woWt<-ls_scaled$wf_fraction_wo_wt 
+wf_scaledToFraction_cdn_woWt$padding_raw<-NULL
+wf_scaledToFraction_cdn_woWt$padding_frctn<-NULL
 wf_scaledToFraction_cdn_wWt<-ls_scaled$wf_fraction_w_wt #### for bookkeeping
+wf_scaledToFraction_cdn_wWt$padding_raw<-NULL
+wf_scaledToFraction_cdn_wWt$padding_frctn<-NULL
+names(wf_scaledToFraction_cdn_wWt)
 
 wf_scaledToFraction_cdn_woWt_group_deltant<-wf_scaledToFraction_cdn_woWt %>%
   mutate(group=ifelse(is.element(str_c(POS,Vt_codon,sep="|"),IntendedKey),paste0(group.names[1],"_VT"), paste0(group.names[2],"_VT"))) %>%
@@ -1194,143 +1224,15 @@ wf_collapsedToAA_FromScaledCdnFraction_andRaw_woWt <- wf_scaledToFraction_cdn_wo
 
 write.csv(wf_scaledToFraction_cdn_woWt_group_deltant,file=paste0(dir_wrt_cdnCounts,"File0_ORFcallOfAnalyzeSatMut_scaledToFraction_cdn_woWt_group_deltant.csv"))
 
-write.csv(wf_scaledToFraction_cdn_wWt_group_deltant,file=paste0(dir_wrt_cdnCounts,"ORFcallOfAnalyzeSatMut_scaledToFraction_cdn_wWt_group_deltant.csv"))
 
-write.csv(wf_0cdn_colSum,file=paste0(dir_wrt_cdnCounts,"ORFcallOfAnalyzeSatMut_perSampleDetectedCdnSum.csv"))
-
-
-write.csv(wf_collapsedToAA_FromScaledCdnFraction_andRaw_woWt,file=paste0(dir_wrt_cdnCounts,"ORFcallOfAnalyzeSatMut_collapsedToAA_fromScaledCdnFractionAndRaw_woWt.csv"))
-
-#########clustering
-forClust<-NULL
-tmp4clust<-NULL
-forClust<-wf_scaledToFraction_cdn_woWt_group_deltant
-tmp4clust<-forClust[which(str_detect(names(forClust),'_raw') & !str_detect(str_to_upper(str_sub(names(forClust),1,3)),'HOP'))]
-if(dim(tmp4clust)[1]!=0){
-  tmp<-scale(tmp4clust, center = TRUE)
-  row.has.na<- apply(tmp, 1, function(x){any(is.na(x))})
-  sum(row.has.na)
-  tmp<-data.frame(tmp[!row.has.na,])
-  clustTmp12<- as.data.frame(t(tmp))
-  d <- dist(clustTmp12, method='euclidean')
-  fit <- hclust(d, method='ward.D')
-  pdf(file=paste0(dir_wrt_cdnCounts,"cluster_cdnCt_raw.pdf"), width=6, height=6) 
-  old.par=par(mfrow=c(1,1))
-  plot(fit, cex=0.7)
-  par(old.par)
-  dev.off()
-}
-forClust<-NULL
-tmp4clust<-NULL
-forClust<-wf_scaledToFraction_cdn_woWt_group_deltant%>%
-  filter(group %in% c(paste0(group.names[1],"_VT"), paste0(group.names[1],"_WT")))
-tmp4clust<-forClust[which(str_detect(names(forClust),'_raw') & !str_detect(str_to_upper(str_sub(names(forClust),1,3)),'HOP'))]
-if(dim(tmp4clust)[1]!=0){
-  tmp<-scale(tmp4clust, center = TRUE)
-  row.has.na<- apply(tmp, 1, function(x){any(is.na(x))})
-  sum(row.has.na)
-  tmp<-data.frame(tmp[!row.has.na,])
-  clustTmp12<- as.data.frame(t(tmp))
-  d <- dist(clustTmp12, method='euclidean')
-  fit <- hclust(d, method='ward.D')
-  pdf(file=paste0(dir_wrt_cdnCounts,"cluster_cdnCt_Intended_raw.pdf"), width=6, height=6) 
-  old.par=par(mfrow=c(1,1))
-  plot(fit, cex=0.7)
-  par(old.par)
-  dev.off()
-}
-
-
-###frctn
-#names(wf_scaledToFraction_cdn_woWt_group_deltant)
-forClust<-NULL
-tmp4clust<-NULL
-tmp4clust<-wf_scaledToFraction_cdn_woWt_group_deltant[which(str_detect(names(wf_scaledToFraction_cdn_woWt_group_deltant),'_frctn') & !str_detect(str_to_upper(str_sub(names(wf_scaledToFraction_cdn_woWt_group_deltant),1,3)),'HOP'))]
-tmp<-scale(tmp4clust, center = TRUE)
-row.has.na<- apply(tmp, 1, function(x){any(is.na(x))})
-sum(row.has.na)
-tmp<-data.frame(tmp[!row.has.na,])
-clustTmp12<- as.data.frame(t(tmp))
-d <- dist(clustTmp12, method='euclidean')
-fit <- hclust(d, method='ward.D')
-pdf(file=paste0(dir_wrt_cdnCounts,"cluster_cdnCt_fraction.pdf"), width=6, height=6) 
-old.par=par(mfrow=c(1,1))
-plot(fit, cex=0.7)
-par(old.par)
-dev.off()
-
-
-forClust<-NULL
-tmp4clust<-NULL
-forClust<-wf_scaledToFraction_cdn_woWt_group_deltant%>%
-  filter(group %in% c(paste0(group.names[1],"_VT"), paste0(group.names[1],"_WT")))
-tmp4clust<-forClust[which(str_detect(names(forClust),'_frctn') & !str_detect(str_to_upper(str_sub(names(forClust),1,3)),'HOP'))]
-
-if(dim(tmp4clust)[1]!=0){
-  tmp<-scale(tmp4clust, center = TRUE)
-  row.has.na<- apply(tmp, 1, function(x){any(is.na(x))})
-  sum(row.has.na)
-  tmp<-data.frame(tmp[!row.has.na,])
-  clustTmp12<- as.data.frame(t(tmp))
-  d <- dist(clustTmp12, method='euclidean')
-  fit <- hclust(d, method='ward.D')
-  
-  pdf(file=paste0(dir_wrt_cdnCounts,"cluster_cdnCt_Intended_fraction.pdf"), width=6, height=6) 
-  old.par=par(mfrow=c(1,1))
-  plot(fit, cex=0.7)
-  par(old.par)
-  dev.off()
-}
-forClust<-NULL
-tmp4clust<-NULL
-########Distribution using .cdnCounts.
-
-expNM_ct<-paste0(sampleAnnot[sampleAnnot$Sample==pDNASample,]$Experiment,"_raw")
-expNM_frctn<-paste0(sampleAnnot[sampleAnnot$Sample==pDNASample,]$Experiment,"_frctn")
-
-table(wf_scaledToFraction_cdn_woWt_group_deltant$group)
-
-intended_cdnCounts_forAUC<-wf_scaledToFraction_cdn_woWt_group_deltant%>%
-  filter(group %in% c(paste0(group.names[1],"_VT"), paste0(group.names[1],"_WT"))) %>%
-  filter(expNM_ct>0)
-
-#names(intended_cdnCounts_forAUC)
-
-hg2<-NULL
-hg1<-NULL
-
-list2<-fracFunNoBlueNoLabel_colArg_generic_auc(fileIn=intended_cdnCounts_forAUC,columns=expNM_frctn,col='black',cex=0.5,alpha=1)
-a<-list2$auc
-hg2<-list2$gph
-hg2=hg2+geom_abline(aes(intercept=0,slope=1),
-                    colour='red', linetype=2, alpha=0.2, size=1)+
-  theme(axis.title=element_text(size=10,face="bold"))
-
-hg2
-
-
-list1<-func_hist_from_raw(fileIn=intended_cdnCounts_forAUC,column=expNM_frctn, txhi=0,breaks=seq(0,20, by=0.1)) 
-avg<-list1$avgReads
-hg1<-list1$hist+
-  theme(axis.title=element_text(size=10,face="bold"))
-hg1
-
-ggsave(filename = paste0(dir_wrt_cdnCounts,paste0(screenNM,"_histogram_intendedVt_frctn.pdf")),hg1)
-ggsave(filename = paste0(dir_wrt_cdnCounts,paste0(screenNM,"_AUCcurve_intendedVt_frctn.pdf")),hg2)
-
-detected_intCdns_cdnCounts<-paste(intended_cdnCounts_forAUC$POS,intended_cdnCounts_forAUC$Vt_codon, sep="|")
-
-missing_cdns_cdnCounts<-IntendedKey[which(!(IntendedKey %in% detected_intCdns_cdnCounts))]
-
-write(missing_cdns_cdnCounts, file=paste0(dir_wrt_cdnCounts,paste0(screenNM,"_AnalyzeSatMut_missingCodons_cdnCounts.txt")))
-
-table(intended_cdnCounts_forAUC$POS)
+# 
 
 
 expNM_ct<-NULL
 expNM_frctn<-NULL
 
-cat("Done with chunk4_cdnCounts\n")
+cat("Done with cdnCounts\n")
+cat("Done with cdnCounts\n", file=logfileName, sep="\n",append=TRUE)
 
 ####Below we are back to .variantCounts data
 ##df10 is a datafile annotated with 9 columns 
@@ -1339,15 +1241,6 @@ df10_1<-df10%>%
   mutate(delta_nt=stringdist(change.from,change.to, method = "hamming"))
 
 table(df10_1$group.plan)
-
-gplot<-ggplot(df10_1)+
-  geom_point(mapping = aes(x=rank.by.pDNA, y=get(pDNASample.ct),col=group.plan), cex=1, pch=19, alpha=0.2)+
-  scale_y_log10()+
-  ggtitle("Annotated group.plan")+
-  coord_cartesian(xlim=c(0,orf_size*63*2))
-ggsave(gplot, filename = paste0(dir_wrt_variantCounts,"abundance_byGroup.pdf"))
-gplot
-gplot<-NULL
 
 table(df10_1$group.plan,df10_1$groupType)
 
@@ -1373,9 +1266,11 @@ df_variant2details_annotated_frctn_corrctd <- df12%>%
 
 ####################
 
-write.csv(df_variant2details_annotated_frctn_corrctd, file=paste0(dir_wrt_variantCounts,"All_variantCounts_merged_annotatedWithDetails_frctn_corrctd.csv"))
+ write.csv(df_variant2details_annotated_frctn_corrctd, file=paste0(dir_wrt_variantCounts,"All_vtCounts_merged_annotatedWithDetails_frctn_corrctd.csv"))
 
 cat("Done with: ORFcall version, saved df_variant2details_annotated_frctn_corrctd\n\nNext up: add key (species with planned vatiants) columns\n")
+cat("Done with: ORFcall version, saved df_variant2details_annotated_frctn_corrctd\n\nNext up: add key (species with planned vatiants) columns\n", file=logfileName, sep="\n",append=TRUE)
+
 
 ##################
 
@@ -1415,6 +1310,8 @@ df[,1:4][df[,1:4]=='NA']<-NA
 
 
 cat("Done with: adding all.int.keys,the.key,the.key.deltaNT \n\nNext up: add the.key.pos and the.key.vt.codon\n")
+cat("Done with: adding all.int.keys,the.key,the.key.deltaNT \n\nNext up: add the.key.pos and the.key.vt.codon\n", file=logfileName, sep="\n",append=TRUE)
+
 
 df_forKey<-df
 P=dim(df_forKey)[1]
@@ -1442,6 +1339,7 @@ df_forKey <- cbind(df_forKey,
                      return(ifelse(str_detect(the.key,"\\|"),paste(t(data.frame(str_split(str_split(the.key,'\\,')[[1]],"\\|")))[,2],collapse = ","),NA))}))
 
 cat("\nDone with adding the.key.pos and the.key.vt_codon\n\nNext up: add the.key.wt_codon\n")
+cat("\nDone with adding the.key.pos and the.key.vt_codon\n\nNext up: add the.key.wt_codon\n", file=logfileName, sep="\n",append=TRUE)
 
 Q=dim(df_forKey)[1]
 df_forKey_00 <- df_forKey %>%
@@ -1461,7 +1359,7 @@ df_forKey <- cbind(df_forKey,
 
 #####
 cat("\nDone with adding the.key.wt_codon\n")
-
+cat("\nDone with adding the.key.wt_codon\n", file=logfileName, sep="\n",append=TRUE)
 #names(df_forKey)
 
 sum(table(df_forKey$the.key.wt_codon))
@@ -1470,8 +1368,6 @@ sum(table(df_forKey$the.key.vt_codon))
 
 m.df_forKey_vt<-merge(x=df_forKey, y=as.data.frame(codonTable[,1:2]), by.x="the.key.vt_codon", by.y="CODON", all=TRUE) %>%
   select(the.key.pos,the.key.vt_codon,"the.key.vt_aa"=AA, everything())
-
-#names(m.df_forKey_vt)
 
 table(m.df_forKey_vt$vt_aa)
 table(m.df_forKey_vt$the.key.vt_aa)
@@ -1485,13 +1381,11 @@ table(m.df_forKey_vt_wt$the.key.vt_aa,m.df_forKey_vt_wt$vt_aa)
 
 
 df_fullSet_31LeadCols<-m.df_forKey_vt_wt %>%
-  #mutate(the.key.deltaNT=stringdist(the.key.wt_codon,the.key.vt_codon,method = "hamming"))%>%
   select(the.key.pos,the.key.wt_codon,the.key.wt_aa, the.key.vt_codon, the.key.vt_aa,
          the.key.deltaNT,  everything())
 
 table(is.na(m.df_forKey_vt_wt$the.key))
 
-#names(df_fullSet_31LeadCols)
 
 sum(table(df_fullSet_31LeadCols$the.key.vt_aa,df_fullSet_31LeadCols$vt_aa))
 
@@ -1499,20 +1393,22 @@ table(df_fullSet_31LeadCols$the.key.vt_aa,df_fullSet_31LeadCols$vt_aa)
 
 df_fullSet_35LeadCols<-df_fullSet_31LeadCols
 
-write.csv(df_fullSet_35LeadCols, file=paste0(dir_wrt_variantCounts,"df_fullSet_35LeadCols.csv"))
 
 cat("Done with: adding the.key columns, df_fullSet_35LeadCols.csv is saved\n")
+cat("Done with: adding the.key columns, df_fullSet_35LeadCols.csv is saved\n", file=logfileName, sep="\n",append=TRUE)
+
 
 ##############rename
 df_fullSet_35LeadCols_renamed<-df_fullSet_35LeadCols
 nms1=names(df_fullSet_35LeadCols_renamed)
 for(i in 1:dim(df_fullSet_35LeadCols_renamed)[2]){
   if(str_sub(nms1[i],1,6)=='Sample'){
-    nms1=gsub(str_sub(nms1[i],1,8), sampleAnnot[sampleAnnot$Sample==str_sub(nms1[i],1,8),]$Experiment, nms1)
+    nms1=gsub(str_sub(nms1[i],1,8), sampleAnnot_long[sampleAnnot_long$Sample==str_sub(nms1[i],1,8),]$Experiment, nms1)
   }
 }
 names(df_fullSet_35LeadCols_renamed)<-nms1
 cat("Done with: 35-col annotations. Ready to create File1 and File2 for handoff\n")
+cat("Done with: 35-col annotations. Ready to create File1 and File2 for handoff\n", file=logfileName, sep="\n",append=TRUE)
 
 table(df_fullSet_35LeadCols_renamed$groupType)
 
@@ -1546,7 +1442,7 @@ df_toHandoff_intended_11leadCols<-df_toHandoff[,c(1:6,11,12,27,35:dim(df_toHando
   mutate_at(.vars="POS",list(~as.numeric(.)))%>% ##conforming with new dplyr funs(name = f(.)) to list(name = ~f(.))
   arrange(POS)
 
-df_toHandoff_intended_11leadCols<-renameSample2Experiment(df_toHandoff_intended_11leadCols,sampleAnnot)
+df_toHandoff_intended_11leadCols<-renameSample2Experiment(df_toHandoff_intended_11leadCols,sampleAnnot_long)
 
 table(df_toHandoff_intended_11leadCols$groupType)
 
@@ -1558,7 +1454,7 @@ table(df_toHandoff_intended_11leadCols$mutationType)
 
 table(df_toHandoff_intended_11leadCols$Vt_aa)
 
-df_toHandoff_sub_indel_23leadCols<-renameSample2Experiment(df_toHandoff_sub_indel_21leadCols,sampleAnnot) %>%
+df_toHandoff_sub_indel_23leadCols<-renameSample2Experiment(df_toHandoff_sub_indel_21leadCols,sampleAnnot_long) %>%
   mutate(Vt.aa.By.Ted=gsub("I:->","II>",Vt.aa.By.Ted)) %>%
   mutate(Vt.aa.By.Ted=gsub(":-",">-",Vt.aa.By.Ted)) %>%
   mutate(Vt.aa.By.Ted=gsub("II>","I:->",Vt.aa.By.Ted))%>%
@@ -1600,8 +1496,8 @@ df_toHandoff_sub_indel_23leadCols<-renameSample2Experiment(df_toHandoff_sub_inde
 table(df_toHandoff_sub_indel_23leadCols$is.the.whole.mol.planned,df_toHandoff_sub_indel_23leadCols$mutationType)
 
 
-generic_samples<-sampleAnnot$Sample
-experiments<-sampleAnnot$Experiment
+generic_samples<-sampleAnnot_long$Sample
+experiments<-sampleAnnot_long$Experiment
 
 experiments[which(as.vector(generic_samples)==as.character(pDNASample))]
 
@@ -1609,7 +1505,7 @@ table(df_toHandoff_sub_indel_23leadCols$is.the.whole.mol.planned,df_toHandoff_su
 
 table(df_toHandoff_sub_indel_23leadCols[df_toHandoff_sub_indel_23leadCols$is.the.whole.mol.planned %in% c('Intended','Intended_byAbndCut'),][[paste0(experiments[which(as.vector(generic_samples)==as.character(pDNASample))],'.ct')]])
 
-###########Using raw count to look at library distribution. Utimately, we should using .fraction for the real distribution.
+###########Using raw count to look at library distribution. Ultimately, we should using .fraction for the real distribution.
 raw.ct.of.intended<-as.data.frame(table(df_toHandoff_sub_indel_23leadCols[df_toHandoff_sub_indel_23leadCols$is.the.whole.mol.planned %in% c('Intended','Intended_byAbndCut'),][[paste0(experiments[which(as.vector(generic_samples)==as.character(pDNASample))],'.ct')]]))
 names(raw.ct.of.intended)<-c("Count","Freq")
 
@@ -1617,27 +1513,6 @@ intended.vt.detected=sum(raw.ct.of.intended$Freq)
 intended.vt.attempted=length(IntendedKey)
 
 perct=round(intended.vt.detected/intended.vt.attempted,3)
-
-int.rawCt.pDNA.hist=ggplot(raw.ct.of.intended)+
-  geom_col(mapping=aes(x=as.numeric(Count), y=as.numeric(Freq)))+
-  ggtitle(paste0("pDNA library: detected = ",intended.vt.detected,"(",perct, ") , out of attempted = ",intended.vt.attempted))
-
-ggsave(plot = int.rawCt.pDNA.hist, filename =paste0(dir_wrt_variantCounts,"IntendedVt_rawCountHist_pDNA.pdf"))
-#####
-
-if(!is.null(twistSample)){
-  raw.ct.of.intended.twist<-as.data.frame(table(df_toHandoff_sub_indel_23leadCols[df_toHandoff_sub_indel_23leadCols$is.the.whole.mol.planned=='Intended',][[paste0(experiments[which(as.vector(generic_samples)==as.character(twistSample))],'.ct')]]))
-  names(raw.ct.of.intended.twist)<-c("Count","Freq")
-  
-  intended.vt.detected.twist=sum(raw.ct.of.intended.twist$Freq)
-  perct.twist=round(intended.vt.detected.twist/intended.vt.attempted,3)
-  
-  int.rawCt.twist.hist=ggplot(raw.ct.of.intended.twist)+
-    geom_col(mapping=aes(x=as.numeric(Count), y=as.numeric(Freq)))+
-    ggtitle(paste0("Twist library: detected = ",intended.vt.detected.twist,"(",perct.twist, ") , out of attempted = ",intended.vt.attempted))
-  
-  ggsave(plot = int.rawCt.twist.hist, filename =paste0(dir_wrt_variantCounts,"IntendedVt_rawCountHist_TwistPool.pdf"))
-}
 
 #########Lib distribution using pDNA fraction
 
@@ -1649,7 +1524,7 @@ detected_int_variantCounts<-paste(df_int_for_distr.pdna$POS,df_int_for_distr.pdn
 
 missing_vt_variantCounts.pdna<-IntendedKey[which(!(IntendedKey %in% detected_int_variantCounts))]
 
-write(missing_vt_variantCounts.pdna, file=paste0(dir_wrt_variantCounts,paste0(screenNM,"_AnalyzeSatMut_missingCodons_pDNA_variantCounts.txt")))
+write(missing_vt_variantCounts.pdna, file=paste0(dir_wrt_variantCounts,paste0(screenNM,"_AnalyzeSatMut_missingCodons_pDNA_vtCounts.txt")))
 
 num.missing.vt.pdna<-length(missing_vt_variantCounts.pdna)
 
@@ -1672,16 +1547,16 @@ hgg2<-list2$gph
 hgg2=hgg2+geom_abline(aes(intercept=0,slope=1),
                       colour='red', linetype=2, alpha=0.2, size=1)+
   theme(axis.title=element_text(size=10,face="bold"))+
-  ggtitle(paste0("pDNA library: missing = ",num.missing.vt.pdna,"(",pcnt.miss.pdna, ") , out of attempted = ",length(IntendedKey)))
+  ggtitle(paste0("pDNA library (File1): missing=",num.missing.vt.pdna,"(",pcnt.miss.pdna, ") , out of attempted=",length(IntendedKey)))
 
-hgg2
+plot(hgg2)
 
 list1<-func_hist_from_raw(fileIn=df_int_for_distr.pdna,column=c(paste0(experiments[which(as.vector(generic_samples)==as.character(pDNASample))],'.ct_frctn')), txhi=0,breaks=seq(0,20, by=0.1)) 
 avg<-list1$avgReads
 hgg1<-list1$hist+
   theme(axis.title=element_text(size=10,face="bold"))+
-  ggtitle(paste0("pDNA library: missing = ",num.missing.vt.pdna,"(",pcnt.miss.pdna, ") , out of attempted = ",length(IntendedKey)))
-hgg1
+  ggtitle(paste0("pDNA library (File1): missing=",num.missing.vt.pdna,"(",pcnt.miss.pdna, ") , out of attempted=",length(IntendedKey)))
+plot(hgg1)
 
 ggsave(filename = paste0(dir_wrt_variantCounts,paste0(screenNM,"_histogram_intendedVt_pDNA_ct_frctn.pdf")),hgg1)
 ggsave(filename = paste0(dir_wrt_variantCounts,paste0(screenNM,"_AUCcurve_intendedVt_pDNA_ct_frctn.pdf")),hgg2)
@@ -1689,8 +1564,7 @@ ggsave(filename = paste0(dir_wrt_variantCounts,paste0(screenNM,"_AUCcurve_intend
 
 #######
 
-
-
+names(df_toHandoff_intended_11leadCols)
 
 write.csv(df_toHandoff_intended_11leadCols, file=paste0(dir_wrt_variantCounts, paste0("File1_",screenNM,"_AnalyzeSatMut_theIntended_11leadCols.csv")))
 
@@ -1698,75 +1572,28 @@ write.csv(df_toHandoff_sub_indel_23leadCols,
           file=paste0(dir_wrt_variantCounts, paste0("File2_",screenNM,"_AnalyzeSatMut_fullSet_23leadCols.csv")))
 
 cat("\nDone with: File1 and File2 \n")
+cat("\nDone with: File1 and File2 \n", file=logfileName, sep="\n",append=TRUE)
 
+
+############# Heatmap for sample2sample correlation
 #######File1 replicates
 
 File1<-read_csv(paste0(dir_wrt_variantCounts,paste0("File1_",screenNM,"_AnalyzeSatMut_theIntended_11leadCols.csv")))
 File1$X1<-NULL
 names(File1)
 
+df_clust.ct_frctn<-File1[which(
+  str_detect(names(File1),'\\.ct_frctn$'))] 
+df_clust.ct_frctn[is.na(df_clust.ct_frctn)] <- 0
 
-df_clust<-File1[which(
-  str_detect(names(File1),'\\.ct$'))] 
+names(df_clust.ct_frctn)
 
-
-names(df_clust)
+if(length(df_clust.ct_frctn)>1){
 
 library(corrplot)
 
 
-
-row.has.na<- apply(df_clust, 1, function(x){any(is.na(x))})
-sum(row.has.na)
-df_clust<-data.frame(df_clust[!row.has.na,])
-
-  png(paste0(dir_wrt_variantCounts,"File1_replicate_correlation_hClust_sortByReplicateName.png"),width = 11, height = 9, units = 'in', res=500)
-
-
-oldpar<-par(mfrow=c(1,1), ps=8)
-cor1<-cor(df_clust, method='pearson')
-corrplot(cor1,method="number", title = "By replicate names", 
-         order='alphabet',hclust.method = 'ward.D2',
-         type='upper',
-         mar=c(0,0,4,0), number.cex = 1, 
-         number.digits=2)
-par(oldpar)
-
-
-  dev.off()
-
-  png(paste0(dir_wrt_variantCounts,"File1_replicate_correlation_hClust_sortByPearson.png"),width = 11, height = 9, units = 'in', res=500)
-
-
-oldpar<-par(mfrow=c(1,1), ps=8)
-corrplot(cor1,method="number", title = "By Pearson", 
-         order='hclust',hclust.method = 'ward.D2',
-         type='upper',
-         mar=c(0,0,4,0), number.cex = 1, 
-         number.digits=3)
-
-par(oldpar)
-
-  dev.off()
-
-###################################More correlation graphs
-  tmp<-scale(df_clust, center = TRUE)
-  row.has.na<- apply(tmp, 1, function(x){any(is.na(x))})
-  sum(row.has.na)
-  tmp<-data.frame(tmp[!row.has.na,])
-  clustTmp12<- as.data.frame(t(tmp))
-  d <- dist(clustTmp12, method='euclidean')
-  fit <- hclust(d, method='ward.D')
-  pdf(file=paste0(dir_wrt_variantCounts,"cluste_File1_rawCt.pdf"), width=6, height=6) 
-  old.par=par(mfrow=c(1,1))
-  plot(fit, cex=0.7)
-  par(old.par)
-  dev.off()
-##################
-
-
-df_clust_scaled<-scale(df_clust, center = TRUE)
-mat<-as.matrix(df_clust_scaled)
+mat<-as.matrix(df_clust.ct_frctn)
 
 getUpperTri <- function(cor.mat){
   cor.mat[lower.tri(cor.mat)] <- NA
@@ -1785,11 +1612,6 @@ reorderCormat <- function(cor.mat){
 }
 
 
-
-
-#cor.df <- reshape2::melt(getUpperTri(reorderCormat(cor(mat))),na.rm=TRUE,value.name="correlation",varnames=c("well_1","well_2"))
-
-
 cor.df <- reshape2::melt(getBothTri(reorderCormat(cor(mat))),na.rm=TRUE,value.name="correlation",varnames=c("well_1","well_2"))
 names(cor.df)
 
@@ -1798,23 +1620,18 @@ hmapRepl<-
   ggplot(cor.df, aes(well_2, well_1, fill=correlation))+
   geom_tile(color="white")+
   scale_fill_gradient2(low="blue", high="red", mid="white", midpoint=0, limit=c(-1,1), space="Lab", name="Pearson\nCorrelation")+
-  geom_text(aes(well_2, well_1,label=round(correlation,3)),cex=5, angle=45)+
+  geom_text(aes(well_2, well_1,label=ifelse(abs(correlation)>0.5, gsub("0\\.","\\.",as.character(round(correlation,2))),'')),
+            cex=3, angle=20)+
   theme_bw()+
   theme(axis.text.x=element_text(angle=90, vjust=1, size=7, hjust=1),
         axis.text.y=element_text(size=7))+
   coord_fixed()+
-  labs(x="",y="")
+  labs(x="",y="")+
+  scale_x_discrete(limits = rev)
 
-
-
-  ggsave(filename=paste0(dir_wrt_variantCounts,"File1_replicateHeatMap.pdf"), plot=hmapRepl)
-
+ggsave(filename=paste0(dir_wrt_variantCounts,"File1_SampleCorrelationHeatMap.pdf"), plot=hmapRepl)
 
 hmapRepl
 
-
-
-
-
-
+}
 
