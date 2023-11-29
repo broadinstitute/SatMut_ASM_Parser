@@ -1,6 +1,6 @@
 # SatMut_ASM_Parser
 
-INTRODUCTION
+**INTRODUCTION**
 
 Saturation Mutagenesis screen (and library QC sequencing) data are complex and gigantic. A typical screen produces 3-5 TB sequencing data in fastq format. ASMv1.0, developed by Ted Sharpe of The Broad Institute, can process the fastq files to identify all (planned and not planned) 'variants' and assign the 'counts' to the detected 'variants.' ASMv1.0 produces many output files for various purposes. Each next-gen sequencing index pair (typically one experimental sample) gets one set of output files. Two ASMv1.0 output files, variantCounts and codonCounts, are subjected to this parser. The codonCounts files are a matrix of fixed dimension, where ncol = 64 (i.e. 64 codons), nrow = 'aa length of the ORF.' The variantCounts files are huge files, where each row represents a species that was detected in read-pairs. It is not uncommon to see near million of rows in a variantCounts file. 
 
@@ -12,13 +12,13 @@ It is challenging for non-data-scientists to lay their hands on either of the AS
 
 This parser is to fill the gap. It is written in R. It takes two kinds of output files of ASMv1.0, codonCounts and variantÇounts, and parse/aggregate/merge/annotate them into csv data files that can be digested by non-data-scientists.
 
-What is ASMv1.0?
+**What is ASMv1.0?**
 
 ASMv1.0, developed by Ted Sharpe of The Broad Institute (tsharpe@broadinstitute.org), takes NGS .fastq files to assign counts to the detected variants.
 
-**READS FILTERING**: The reads from an NGS fragment are trimmed (1) by base quality (from 2 ends, finding first 15-bp that every base has above base-quality threshold), (2) by removing non-ORF transposon sequences, (3) by requiring that the outermost nucleotide variations in the reads have a number of reference bases as specified by --min-flanking-length parameter (2-5, depending on how the library is designed, e.g. if the library has all single codon changes, --min-flanking-length=2 will suffice to ensure a codon-signature of a variant is not split between two Nextera fragments), and (4) by requiring the trimmed reads be longer than the –min-length = 40, for example.
+*READS FILTERING*: The reads from an NGS fragment are trimmed (1) by base quality (from 2 ends, finding first 15-bp that every base has above base-quality threshold), (2) by removing non-ORF transposon sequences, (3) by requiring that the outermost nucleotide variations in the reads have a number of reference bases as specified by --min-flanking-length parameter (2-5, depending on how the library is designed, e.g. if the library has all single codon changes, --min-flanking-length=2 will suffice to ensure a codon-signature of a variant is not split between two Nextera fragments), and (4) by requiring the trimmed reads be longer than the –min-length = 40, for example.
 
-**VARIANT CALLING**: The reads that have passed the filtering are used differently by ORFcall (an earlier version software also by Ted Sharpe, as used in: Giacomelli et al (2018) Nat Genet 50: 1381–1387) and ASMv1.0:
+*VARIANT CALLING*: The reads that have passed the filtering are used differently by ORFcall (an earlier version software also by Ted Sharpe, as used in: Giacomelli et al (2018) Nat Genet 50: 1381–1387) and ASMv1.0:
 
 (1) Under ORFcall, variants are called in context of a single codon space, that is, if a read, or read pair captures multiple codon variations, they are called as multiple independent molecules. This seems not fair as the read counts are assigned to each of the molecules represented by each codon change, without regard of the association of the multiple changes physically in a single molecule. Yet since a good quality of a library generally don’t have many unplanned variations, the codon-centric calls by ORFcall is in fact a good proximation. 
 
@@ -28,7 +28,7 @@ ASMv1.0, developed by Ted Sharpe of The Broad Institute (tsharpe@broadinstitute.
 
 -	Indel detection: This feature was lacking in ORFcall. This new feature of ASMv1.0 allows us to process indel libraries with up to 10-codon indels.
 
-What is ASM_Parser?
+**What is ASM_Parser?**
 
 Written by Xiaoping Yang of The Broad Institute (xyang@broadinstitute.org), ASM_Parser produces 3 Data Files:
 
@@ -106,84 +106,54 @@ File 2: The version of data file (with following 23 lead columns) would allow mo
 
 With File2, one can do everything that can be done with data File1, and more. Personally, I would like to assess library purity (the pristine intended molecules vs. those with unwanted changes), and the artificial variant calls from PCR/NGS errors. 
 
-INSTRUCTION TO RUN THE PARSER
+**INSTRUCTION TO RUN THE PARSER**
+It saves a lot of trouble by setting up the R work directory in such that in all we will have 2 folders, and 3 supporting files including the R code itself (see the folder/file structure at the end of this document).
+
+*TWO FOLDERS:*
 1. Move all .variantCounts files into a folder, e.g. variantCounts/ 
 	The individual .variantCounts flies should have been named to have ’Sample[0-9][0-9]’ in the file names. When you ran ASMv1.0, the setup of it should already be good to name the ASMv1.0 output files. If not, you can always rename these files to have  ‘Sample[0-9][0-9]’ in the name.
 
 2. Move all .codonCounts files into a folder, e.g. codonCounts/ The individual .codonCounts flies should have been names to have ’Sample[0-9][0-9]’ in the file names.
 
-3. Set up the parser, by populate following 12 variables:
+*THREE FILES:*
+1. “SampleAnnot.csv" file. This is a sample mapping file: two columns named 'Sample' and 'Experiment'. Be advised that 'Sample' column has to be the below format (case sensitive), and do not have 'spaces', or 'dashes' in 'Experiment.’ Note if you have multiple sequencing runs from the same sample ane/or you wish to combine the data from runs of sequencing data into one, you may name those runs with the same Sample number but followed by '_1', '_2' etc. (e.g., Sample08_1) including in both .codonCounts and .variantCounts data file names and the "SampleAnnot.csv" file, AND the 'Experiment' should be the same entry for all samples involved. If you would like to keep these replicates separate, as I often do, name the sample/experiment uniquely.
 
-	a) ORF_Amplicon:
-	
-	e.g. ORF_Amplicon = "ATTCTCCTTGGAATTTGCCCTTTTTGAGTTTGGATCTTGGTTCATTCTCAAGCCTCAGACAGTGGTTCAAAGTTTTTTTCTTCCATTTCAGGTGTCGTGAGGCTAGCGCCACC[atgagtgtctga]GGATCCCGGGACTAGTACGCGTTAAGTCGACAATCAACCTCTGGATTACAAAATTTGTGAAAGATTGACTGGTATTCTTAACTATGTTGCTCCTTTTACGCTATG"
-	
-	The sequences are case-insensitive. This amplicon should be the PCR products inclusive of PCR primer sequences. The boundary of ORF are marked by '[' before the start codon and ']' after the stop codon. This has to be the EXACTLY the 'reference file' used by ASMv1.0 to produce the .codonCounts and .variantCounts.
-	
-	b) dir_variantCounts:
-	
-	e.g. dir_variantCounts = "~/Documents/variantCounts/" # the directory that holds all .variantCounts files
-	
-	c) dir_cdnCounts:
-	
-	dir_cdnCounts = "~/Documents/codonCounts/" # the directory that holds all .codonCounts files
+For example:
+Sample	Experiment
+Sample01	experiment1
+Sample02	experiment2
+Sample03	experiment3
+Sample04	experiment4
+Sample05	experiment5
+Sample06	experiment6
+Sample07	experiment7
+Sample08_1	experiment8
+Sample08_2	experiment8
+Sample08_3	experiment8
+ 
+2. "Intended_codon_list_1col.csv" file. This is a 1-column csv file listing the planned codon changes, with the column named 'key,’ formatted as aa_position|planned_codon.
 
-	d) sampleAnnot: 
-	
-	sampleAnnot = read_csv("~/Documents/sampleAnnot_SHOC2_NovaSeq.csv")
-Sample mapping file: two columns named 'Sample' and 'Experiment'
+For example
+key
+1|AAA
+1|AAT
+1|ACT
 
-Example
-Sample	| Experiment |
--------------|---------------------------------------|
-Sample01 |	replicate_1_ETP |
-Sample02 |	replicate_1_drug3days |
-
-
-	e) codonDesigned: 
-	
-	codonDesigned = read_csv("~/Documents/CodonDesigns_SHOC2.csv") #specify the file name of intended codons
-
-	planned codon changes: one column named 'key'
-
-	Example	
-key |
--------------- | 
-1\|AAA | 
-1\|AAT| 
-	
-	f) screenNM: 
-	
-	screenNM = "SHOC2_pMT025_scrn_rerun" ##anything you call your screen
-
-	g) gene: 
-	
-	gene = 'SHOC2' # It is part of input file name, so has to be exact.
-
-	h) clonalSample:
-	
-	clonalSample = c("Sample13") #"Sample13" #specify clonal sample number if there is one. Otherwise set clonalSample<-NULL
-
-	i) pDNASample:
-	
-	pDNASample = c('Sample14') ##specify pDNA library sample number - you should alway carry one. If not, use an ETP sample so the code can run.
-
-	j) refSamples:
-	
-	refSamples = c('Sample01','Sample02','Sample03') # It needs 3 elements. The reference samples are those that were not selected. e.g. early time point (ETP) samples. If you don't have 3 reference samples, repeat your reference sample name(s) to make a 3-element array.
-		
-	k) lowCountCutForRef:
-	
-	lowCountCutForRef = 2 # variants in reference samples that got counts equal or below this will be filtered out.  0 allows all species
-
-	l) lowCountCutForTreatment:
-	
-	lowCountCutForTreatment = 2 # variants in treatment/selection samples that got counts equal or below this will be filtered out.  0 allows all species
-
+3. The file the R-code parser itself. You need to edit the top portion of the code to reflect your work. 
+-  Wild-type ORF sequence 
+-  Screen name
+-  Gene name
+-  Sample## for pDNA library
+-  Sample## for clonal wild-type plasmid
+-  Sample## of those un-slected, or less selected that may be used to filter out the called, but low-abundance variants. 
 
 Then RUN the entire .r code. The data files and plots will be written into the 'outbox' folders inside of your ’variantCounts’  or ‘codonCounts’ folders. 
+
+As a training set, in the zip file ‘WorkingDir_for_Parser_v2_0.zip,’  real data and the folder/file structures are already properly set up. You only need to update the ‘work.dir’  variable in the R code ‘SatMut_ASM_Parser_v2_0.R’ to the actual directory on your machine and then run the code.
 
 ****************
 
 Good luck and direct your questions to xyang@broadinstitute.org
+
+
 
