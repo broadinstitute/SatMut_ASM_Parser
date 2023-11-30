@@ -1,4 +1,5 @@
 # SatMut_ASM_Parser
+
 **INTRODUCTION**
 
 Saturation Mutagenesis screen (and library QC sequencing) data are complex and gigantic. A typical screen produces 3-5 TB sequencing data in fastq format. ASMv1.0, developed by Ted Sharpe of The Broad Institute, can process the fastq files to identify all (planned and not planned) 'variants' and assign the 'counts' to the detected 'variants.' ASMv1.0 produces many output files for various purposes. Each next-gen sequencing index pair (typically one experimental sample) gets one set of output files. Two ASMv1.0 output files, variantCounts and codonCounts, are subjected to this parser. The codonCounts files are a matrix of fixed dimension, where ncol = 64 (i.e. 64 codons), nrow = 'aa length of the ORF.' The variantCounts files are huge files, where each row represents a species that was detected in read-pairs. It is not uncommon to see near million of rows in a variantCounts file. 
@@ -41,18 +42,19 @@ File 1: sub-dataset representing the ‘intended’ variants, with following col
 
 - 11 leading columns that annotate the detected variants:
 
-11 Lead-Column Names:			Examples:
-  [1] "variant.by.nt.at.codon.level" 		GCG|2|CCC                       
-  [2] "variant.by.aa"                 		A2P           
-  [3] "POS"                           	 	2         
-  [4] "Wt_codon"                        		GCG               
-  [5] "Vt_codon"                         		CCC             
-  [6] "Wt_aa"                           		A             
-  [7] "Vt_aa"                              		P       
-  [8] "delta_nt"                           		2          
-  [9] "is.the.whole.mol.planned"   		Intended         
- [10] "del_ins_or_sub"                   		sub              
- [11] "mutationType" 			missense
+11 Lead-Column Names		|                  Example_variant|
+--------------------------------------------------------|---------------------------------------|
+  [1] "variant.by.nt.at.codon.level"  |     GCG\|2\|CCC |                      
+  [2] "variant.by.aa"                 |            A2P   |           
+  [3] "POS"                            |              2 |         
+  [4] "Wt_codon"                        |         GCG   |             
+  [5] "Vt_codon"                         |         CCC  |             
+  [6] "Wt_aa"                             |          A   |          
+  [7] "Vt_aa"                              |          P   |       
+  [8] "delta_nt"                            |         2    |        
+  [9] "is.the.whole.mol.planned"        |  Intended         |             
+ [10] "del_ins_or_sub"                   |     sub           |        
+ [11] "mutationType" 		     | missense|
 
 
 - The above 11 columns are followed by sample specific 3-column sets: 
@@ -74,81 +76,87 @@ With this File1, collaborators should be able to plot one sample against the oth
 
 File 2: The version of data file (with following 23 lead columns) would allow more in-depth analysis.
 
-23 Lead-Column Names:							Examples:
-[1] "variant.description.by.unit.of.wtCdn.cdnPos" 			ATG|2|GAC,CTG|43|GTG
-[2] "variant.description.by.unit.of.wt.nt_Ted"				131:A>G, 132:T>A, 133:G>C, 254:C>G
-[3] "variant.description.by.unit.of.cdnPos"  				2|GAC,43|GTG
-[4] "num.whole.mol.nt.changes_Ted"   					4
-[5] "num.whole.mol.cdn.changes_upto.a.stop_Ted"  			2
-[6] "list.whole.mol.all.cdn.changes_upto.a.stop_Ted"  			2:ATG>GAC, 43:CTG>GTG
-[7] "list.whole.mol.all.aa.changes_upto.a.stop_Ted" 			M:M>D, M:L>V
-[8] "is.the.whole.mol.planned"  						Unintended
-[9] "pos.of.cdnChange.if.whole.mol.is.intended"		
-[10] "del_ins_or_sub" 							sub
-[11] "mutationType" 								missense
-[12] "is.there.frame.shift" 							FALSE
-[13] "subList.all.intended.cdnChanges.ifAny.detected.in.the.mol"	2|GAC,43|GTG
-[14] "pick.the.highest.intendedCdnDeltaNtChange.cdnPos"		2
-[15] "pick.the.highest.intendedCdnDeltaNtChange.wtCdn" 		ATG
-[16] "pick.the.highest.intendedCdnDeltaNtChange.wtAA"		M
-[17] "pick.the.highest.intendedCdnDeltaNtChange.vtCdn"		GAC
-[18] "pick.the.highest.intendedCdnDeltaNtChange.vtAA"		D
-[19] "pick.the.highest.intendedCdnDeltaNtChange.deltaNT"		3
-[20] "num.insertion.nt"                                      				0
-[21] "num.deletion.nt"   							0
-[22] "the.first.mutation.event.occurs.at.ntPos"				4
-[23] "the.first.mutation.event.occurs.at.nthNT.in.a.cdn"			1
+23 Lead-Column Names							             |                  Example_variant|
+--------------------------------------------------------|---------------------------------------|
+[1] "variant.description.by.unit.of.wtCdn.cdnPos" |              	ATG\|2\|GAC,CTG\|43\|GTG |
+[2] "variant.description.by.unit.of.wt.nt_Ted"       |          	131:A>G, 132:T>A, 133:G>C, 254:C>G|
+[3] "variant.description.by.unit.of.cdnPos"                 |   	2\|GAC,43\|GTG  |
+[4] "num.whole.mol.nt.changes_Ted"                         |    	4|
+[5] "num.whole.mol.cdn.changes_upto.a.stop_Ted"           |     	2|
+[6] "list.whole.mol.all.cdn.changes_upto.a.stop_Ted"     |      	2:ATG>GAC, 43:CTG>GTG|
+[7] "list.whole.mol.all.aa.changes_upto.a.stop_Ted"     |       	M:M>D, M:L>V|
+[8] "is.the.whole.mol.planned"                        |         	Unintended|
+[9] "pos.of.cdnChange.if.whole.mol.is.intended"   |             	|
+[10] "del_ins_or_sub"                               |            sub|
+[11] "mutationType"                                  |           missense|
+[12] "is.there.frame.shift"                           |          FALSE|
+[13] "subList.all.intended.cdnChanges.ifAny.detected.in.the.mol"| 2\|GAC,43\|GTG |
+[14] "pick.the.highest.intendedCdnDeltaNtChange.cdnPos"|         2|
+[15] "pick.the.highest.intendedCdnDeltaNtChange.wtCdn"  |        ATG|
+[16] "pick.the.highest.intendedCdnDeltaNtChange.wtAA"    |       M|
+[17] "pick.the.highest.intendedCdnDeltaNtChange.vtCdn"    |      GAC|
+[18] "pick.the.highest.intendedCdnDeltaNtChange.vtAA"      |     D|
+[19] "pick.the.highest.intendedCdnDeltaNtChange.deltaNT"    |    3|
+[20] "num.insertion.nt"                                      |   0|
+[21] "num.deletion.nt"                                        |  0|
+[22] "the.first.mutation.event.occurs.at.ntPos"                | 4|
+[23] "the.first.mutation.event.occurs.at.nthNT.in.a.cdn"    	|	1|
+
 
 
 With File2, one can do everything that can be done with data File1, and more. Personally, I would like to assess library purity (the pristine intended molecules vs. those with unwanted changes), and the artificial variant calls from PCR/NGS errors. 
 
 **INSTRUCTION TO RUN THE PARSER**
 
-It saves a lot of trouble by setting up the R work directory in such that in all we will have 2 folders, and 3 supporting files including the R code itself (see the folder/file structure at the end of this document).
+It saves a lot of trouble by setting up the R work directory in such that we will have 2 folders, and 3 supporting files including the R code itself, all in the same level in a directory.
 
 *TWO FOLDERS:*
+
 1. Move all .variantCounts files into a folder, e.g. variantCounts/ 
-	The individual .variantCounts flies should have been named to have ’Sample[0-9][0-9]’ in the file names. When you ran ASMv1.0, the setup of it should already be good to name the ASMv1.0 output files. If not, you can always rename these files to have  ‘Sample[0-9][0-9]’ in the name.
+	The individual .variantCounts flies should have been named to have ’Sample[0-9][0-9]’ in the file names. When you ran ASMv1.0, you may set up the run such that ASMv1.0 output files are named in such a way. If not, you can always rename these files to have  ‘Sample[0-9][0-9]’ in the name.
 
 2. Move all .codonCounts files into a folder, e.g. codonCounts/ The individual .codonCounts flies should have been names to have ’Sample[0-9][0-9]’ in the file names.
 
 *THREE FILES:*
+
 1. “SampleAnnot.csv" file. This is a sample mapping file: two columns named 'Sample' and 'Experiment'. Be advised that 'Sample' column has to be the below format (case sensitive), and do not have 'spaces', or 'dashes' in 'Experiment.’ Note if you have multiple sequencing runs from the same sample ane/or you wish to combine the data from runs of sequencing data into one, you may name those runs with the same Sample number but followed by '_1', '_2' etc. (e.g., Sample08_1) including in both .codonCounts and .variantCounts data file names and the "SampleAnnot.csv" file, AND the 'Experiment' should be the same entry for all samples involved. If you would like to keep these replicates separate, as I often do, name the sample/experiment uniquely.
 
 For example:
-Sample	Experiment
-Sample01	experiment1
-Sample02	experiment2
-Sample03	experiment3
-Sample04	experiment4
-Sample05	experiment5
-Sample06	experiment6
-Sample07	experiment7
-Sample08_1	experiment8
-Sample08_2	experiment8
-Sample08_3	experiment8
+Sample | Experiment|
+----------|------------------|
+Sample01 | 	experiment1|
+Sample02|	experiment2|
+Sample03|	experiment3|
+Sample04|	experiment4|
+Sample05|	experiment5|
+Sample06|	experiment6|
+Sample07|	experiment7|
+Sample08_1|	experiment8|
+Sample08_2|	experiment8|
+Sample08_3|	experiment8|
  
 2. "Intended_codon_list_1col.csv" file. This is a 1-column csv file listing the planned codon changes, with the column named 'key,’ formatted as aa_position|planned_codon.
 
 For example
-key
-1|AAA
-1|AAT
-1|ACT
 
-3. The file the R-code parser itself. You need to edit the top portion of the code to reflect your work. 
--  Wild-type ORF sequence 
+key|
+----|
+1\|AAA|
+1\|AAT|
+1\|ACT|
+
+3. The 3rd file is the R-code parser itself. You need to edit the top portion of the code to reflect your work. 
+-  Wild-type ORF sequence plus flanks 
 -  Screen name
 -  Gene name
 -  Sample## for pDNA library
 -  Sample## for clonal wild-type plasmid
--  Sample## of those un-slected, or less selected that may be used to filter out the called, but low-abundance variants. 
+-  Sample## of those un-selected, or less selected that may be used to filter out the called, but low-abundance variants. 
 
-Then RUN the entire .r code. The data files and plots will be written into the 'outbox' folders inside of your ’variantCounts’  or ‘codonCounts’ folders. 
+Then RUN the entire .r code. The data files and plots will be written into the 'outbox...' folders inside of your ’variantCounts’  or ‘codonCounts’ folders. 
 
-As a training set, in the zip file ‘WorkingDir_for_Parser_v2_0.zip,’  real data and the folder/file structures are already properly set up. You only need to update the ‘work.dir’  variable in the R code ‘SatMut_ASM_Parser_v2_0.R’ to the actual directory on your machine and then run the code.
+For your conveniece, I provide you with a training set, in the zip file ‘WorkingDir_for_Parser_v2_0.zip.’ It has real data and the folder/file structures are already properly set up. You only need to update the ‘work.dir’  variable in the R code ‘SatMut_ASM_Parser_v2_0.R’ therein (part of the zip file) to the actual directory on your machine and then run the code.
 
-￼
 ****************
-Good luck and direct your questions to **xyang@broadinstitute.org**
 
+Good luck and direct your questions to xyang@broadinstitute.org
