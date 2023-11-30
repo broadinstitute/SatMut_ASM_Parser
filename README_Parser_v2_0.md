@@ -107,49 +107,55 @@ File 2: The version of data file (with following 23 lead columns) would allow mo
 With File2, one can do everything that can be done with data File1, and more. Personally, I would like to assess library purity (the pristine intended molecules vs. those with unwanted changes), and the artificial variant calls from PCR/NGS errors. 
 
 **INSTRUCTION TO RUN THE PARSER**
-It saves a lot of trouble by setting up the R work directory in such that in all we will have 2 folders, and 3 supporting files including the R code itself (see the folder/file structure at the end of this document).
+
+It saves a lot of trouble by setting up the R work directory in such that we will have 2 folders, and 3 supporting files including the R code itself, all in the same level in a directory.
 
 *TWO FOLDERS:*
+
 1. Move all .variantCounts files into a folder, e.g. variantCounts/ 
-	The individual .variantCounts flies should have been named to have ’Sample[0-9][0-9]’ in the file names. When you ran ASMv1.0, the setup of it should already be good to name the ASMv1.0 output files. If not, you can always rename these files to have  ‘Sample[0-9][0-9]’ in the name.
+	The individual .variantCounts flies should have been named to have ’Sample[0-9][0-9]’ in the file names. When you ran ASMv1.0, you may set up the run such that ASMv1.0 output files are named in such a way. If not, you can always rename these files to have  ‘Sample[0-9][0-9]’ in the name.
 
 2. Move all .codonCounts files into a folder, e.g. codonCounts/ The individual .codonCounts flies should have been names to have ’Sample[0-9][0-9]’ in the file names.
 
 *THREE FILES:*
+
 1. “SampleAnnot.csv" file. This is a sample mapping file: two columns named 'Sample' and 'Experiment'. Be advised that 'Sample' column has to be the below format (case sensitive), and do not have 'spaces', or 'dashes' in 'Experiment.’ Note if you have multiple sequencing runs from the same sample ane/or you wish to combine the data from runs of sequencing data into one, you may name those runs with the same Sample number but followed by '_1', '_2' etc. (e.g., Sample08_1) including in both .codonCounts and .variantCounts data file names and the "SampleAnnot.csv" file, AND the 'Experiment' should be the same entry for all samples involved. If you would like to keep these replicates separate, as I often do, name the sample/experiment uniquely.
 
 For example:
-Sample	Experiment
-Sample01	experiment1
-Sample02	experiment2
-Sample03	experiment3
-Sample04	experiment4
-Sample05	experiment5
-Sample06	experiment6
-Sample07	experiment7
-Sample08_1	experiment8
-Sample08_2	experiment8
-Sample08_3	experiment8
+Sample | Experiment|
+----------|------------------|
+Sample01 | 	experiment1|
+Sample02|	experiment2|
+Sample03|	experiment3|
+Sample04|	experiment4|
+Sample05|	experiment5|
+Sample06|	experiment6|
+Sample07|	experiment7|
+Sample08_1|	experiment8|
+Sample08_2|	experiment8|
+Sample08_3|	experiment8|
  
 2. "Intended_codon_list_1col.csv" file. This is a 1-column csv file listing the planned codon changes, with the column named 'key,’ formatted as aa_position|planned_codon.
 
 For example
-key
-1|AAA
-1|AAT
-1|ACT
 
-3. The file the R-code parser itself. You need to edit the top portion of the code to reflect your work. 
--  Wild-type ORF sequence 
+key|
+----|
+1\|AAA|
+1\|AAT|
+1\|ACT|
+
+3. The 3rd file is the R-code parser itself. You need to edit the top portion of the code to reflect your work. 
+-  Wild-type ORF sequence plus flanks 
 -  Screen name
 -  Gene name
 -  Sample## for pDNA library
 -  Sample## for clonal wild-type plasmid
 -  Sample## of those un-slected, or less selected that may be used to filter out the called, but low-abundance variants. 
 
-Then RUN the entire .r code. The data files and plots will be written into the 'outbox' folders inside of your ’variantCounts’  or ‘codonCounts’ folders. 
+Then RUN the entire .r code. The data files and plots will be written into the 'outbox...' folders inside of your ’variantCounts’  or ‘codonCounts’ folders. 
 
-As a training set, in the zip file ‘WorkingDir_for_Parser_v2_0.zip,’  real data and the folder/file structures are already properly set up. You only need to update the ‘work.dir’  variable in the R code ‘SatMut_ASM_Parser_v2_0.R’ to the actual directory on your machine and then run the code.
+For your conveniece, I provide you with a training set, in the zip file ‘WorkingDir_for_Parser_v2_0.zip.’ It has real data and the folder/file structures are already properly set up. You only need to update the ‘work.dir’  variable in the R code ‘SatMut_ASM_Parser_v2_0.R’ therein (part of the zip file) to the actual directory on your machine and then run the code.
 
 ****************
 
