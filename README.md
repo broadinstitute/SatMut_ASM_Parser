@@ -108,7 +108,10 @@ With File2, one can do everything that can be done with data File1, and more. Pe
 
 **INSTRUCTION TO RUN THE PARSER**
 
-It saves a lot of trouble by setting up the R work directory in such that we will have 2 folders, and 3 supporting files including the R code itself, all in the same level in a directory.
+It saves a lot of trouble by setting up the R work directory in such that we will have 2 folders, and 3 supporting files including the R code itself, all in the same level in a directory. The image below depicts the organization of the folders and files:
+
+![image](https://github.com/broadinstitute/SatMut_ASM_Parser/assets/84196195/0e740910-38ba-4adf-8f5e-74380cb0dbda)
+
 
 *TWO FOLDERS:*
 
